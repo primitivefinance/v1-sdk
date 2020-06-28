@@ -1,0 +1,67 @@
+{
+    "name": "@primitive/sdk",
+    "version": "0.1.0",
+    "description": "An SDK to interact with the Primitive Protocol.",
+    "main": "dist/index.js",
+    "typings": "dist/index.d.ts",
+    "files": [
+        "dist",
+        "src"
+    ],
+    "engines": {
+        "node": ">=10"
+    },
+    "scripts": {
+        "start": "tsdx watch",
+        "build": "tsdx build",
+        "test": "tsdx test",
+        "lint": "tsdx lint",
+        "prepare": "tsdx build",
+        "trader": "tsc ./src/lib/trader.ts && node ./src/lib/trader.js"
+    },
+    "peerDependencies": {},
+    "husky": {
+        "hooks": {
+            "pre-commit": "tsdx lint"
+        }
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/primitivefinance/primitive-sdk.git"
+    },
+    "keywords": [
+        "defi",
+        "solidity",
+        "ethereum",
+        "sdk",
+        "primitive"
+    ],
+    "author": "Primitive",
+    "license": "MIT",
+    "bugs": {
+        "url": "https://github.com/primitivefinance/primitive-sdk/issues"
+    },
+    "homepage": "https://github.com/primitivefinance/primitive-sdk#readme",
+    "devDependencies": {
+        "@primitivefi/contracts": "^0.2.4",
+        "husky": "^4.2.5",
+        "prettier": "^2.0.5",
+        "ts-node": "^8.10.2",
+        "tsdx": "^0.13.2",
+        "tslib": "^2.0.0",
+        "typescript": "^3.9.5"
+    },
+    "dependencies": {
+        "ethers": "^5.0.2"
+    },
+    "prettier": {
+        "printWidth": 100,
+        "semi": true,
+        "singleQuote": false,
+        "trailingComma": "es5",
+        "tabWidth": 4
+    },
+    "resolutions": {
+        "@babel/preset-env": "^7.8.7"
+    }
+}
