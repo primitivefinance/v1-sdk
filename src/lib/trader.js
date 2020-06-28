@@ -1,9 +1,4 @@
 "use strict";
-/* import { getOptionAddress, getOptionInstanceWithAddress } from "./prime";
-import { checkAllowance, getERC20Instance } from "./ERC20";
-import { TOKENS_CONTEXT } from "./constants";
-import { newInstance, getAccount, toWei, getNetwork } from "./web3";
-import BN from "bn.js"; */
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
@@ -41,15 +36,14 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
     }
 };
 exports.__esModule = true;
-/* const PrimeTrader = require("@primitivefi/contracts/artifacts/PrimeTrader.json"); */
+exports.Trader = void 0;
+var ethers_1 = require("ethers");
+var web3_1 = require("./web3");
 var PrimeTraderDeployed = require("../artifacts/trader.js");
 var ERC20 = require("../artifacts/erc20.js");
 var PrimeOption = require("../artifacts/PrimeOption.js");
-var ethers_1 = require("ethers");
-var web3_1 = require("./web3");
 var parseEther = ethers_1.ethers.utils.parseEther;
 var TestMnemonic = process.env.TEST_MNEMONIC ? process.env.TEST_MNEMONIC : "";
-console.log("starting class");
 var getERC20Instance = function (signer, address) { return __awaiter(void 0, void 0, void 0, function () {
     var contract;
     return __generator(this, function (_a) {
@@ -117,50 +111,185 @@ var Trader = /** @class */ (function () {
     };
     Trader.prototype.safeMint = function (address, amount) {
         return __awaiter(this, void 0, void 0, function () {
-            var account, option, underlying, tokenU, _a, _b, mint, err_1;
+            var trader, account, option, underlying, tokenU, mint, err_1;
+            return __generator(this, function (_a) {
+                switch (_a.label) {
+                    case 0: return [4 /*yield*/, this.contract()];
+                    case 1:
+                        trader = _a.sent();
+                        return [4 /*yield*/, web3_1.getAccount(this.signer)];
+                    case 2:
+                        account = _a.sent();
+                        return [4 /*yield*/, getOptionInstance(this.signer, address)];
+                    case 3:
+                        option = _a.sent();
+                        return [4 /*yield*/, option.tokenU()];
+                    case 4:
+                        underlying = _a.sent();
+                        return [4 /*yield*/, getERC20Instance(this.signer, underlying)];
+                    case 5:
+                        tokenU = _a.sent();
+                        return [4 /*yield*/, checkAllowance(this.signer, tokenU, trader.address, amount)];
+                    case 6:
+                        _a.sent();
+                        _a.label = 7;
+                    case 7:
+                        _a.trys.push([7, 9, , 10]);
+                        return [4 /*yield*/, trader.safeMint(option.address, parseEther(amount.toString()), account)];
+                    case 8:
+                        mint = _a.sent();
+                        return [3 /*break*/, 10];
+                    case 9:
+                        err_1 = _a.sent();
+                        console.log({ err: err_1 });
+                        mint = {};
+                        return [3 /*break*/, 10];
+                    case 10: return [2 /*return*/, mint];
+                }
+            });
+        });
+    };
+    Trader.prototype.safeExercise = function (address, amount) {
+        return __awaiter(this, void 0, void 0, function () {
+            var trader, account, option, tokenS, _a, _b, inTokenS, inTokenP, _c, _d, _e, _f, _g, exercise, err_2;
+            return __generator(this, function (_h) {
+                switch (_h.label) {
+                    case 0: return [4 /*yield*/, this.contract()];
+                    case 1:
+                        trader = _h.sent();
+                        return [4 /*yield*/, web3_1.getAccount(this.signer)];
+                    case 2:
+                        account = _h.sent();
+                        return [4 /*yield*/, getOptionInstance(this.signer, address)];
+                    case 3:
+                        option = _h.sent();
+                        _a = getERC20Instance;
+                        _b = [this.signer];
+                        return [4 /*yield*/, option.tokenS()];
+                    case 4: return [4 /*yield*/, _a.apply(void 0, _b.concat([_h.sent()]))];
+                    case 5:
+                        tokenS = _h.sent();
+                        return [4 /*yield*/, checkAllowance(this.signer, tokenS, trader.address, amount)];
+                    case 6:
+                        _h.sent();
+                        return [4 /*yield*/, checkAllowance(this.signer, option, trader.address, amount)];
+                    case 7:
+                        _h.sent();
+                        inTokenS = parseEther(amount.toString());
+                        _c = Number;
+                        _f = (_e = inTokenS).mul;
+                        return [4 /*yield*/, option.base()];
+                    case 8:
+                        _g = (_d = _f.apply(_e, [_h.sent()])).div;
+                        return [4 /*yield*/, option.price()];
+                    case 9:
+                        inTokenP = _c.apply(void 0, [_g.apply(_d, [_h.sent()])]);
+                        _h.label = 10;
+                    case 10:
+                        _h.trys.push([10, 12, , 13]);
+                        return [4 /*yield*/, trader.safeExercise(address, inTokenS.toString(), account)];
+                    case 11:
+                        exercise = _h.sent();
+                        return [3 /*break*/, 13];
+                    case 12:
+                        err_2 = _h.sent();
+                        console.error({ err: err_2 });
+                        exercise = {};
+                        return [3 /*break*/, 13];
+                    case 13: return [2 /*return*/, exercise];
+                }
+            });
+        });
+    };
+    Trader.prototype.safeRedeem = function (address, amount) {
+        return __awaiter(this, void 0, void 0, function () {
+            var trader, account, option, tokenR, _a, _b, redeem, err_3;
             return __generator(this, function (_c) {
                 switch (_c.label) {
-                    case 0: return [4 /*yield*/, web3_1.getAccount(this.signer)];
+                    case 0: return [4 /*yield*/, this.contract()];
                     case 1:
+                        trader = _c.sent();
+                        return [4 /*yield*/, web3_1.getAccount(this.signer)];
+                    case 2:
                         account = _c.sent();
                         return [4 /*yield*/, getOptionInstance(this.signer, address)];
-                    case 2:
-                        option = _c.sent();
-                        return [4 /*yield*/, option.tokenU({ from: this.signer.getAddress() })];
                     case 3:
-                        underlying = _c.sent();
-                        return [4 /*yield*/, getERC20Instance(this.signer, underlying)];
-                    case 4:
-                        tokenU = _c.sent();
-                        _a = checkAllowance;
-                        _b = [this.signer, tokenU];
-                        return [4 /*yield*/, this.address()];
-                    case 5: return [4 /*yield*/, _a.apply(void 0, _b.concat([_c.sent(), amount]))];
+                        option = _c.sent();
+                        _a = getERC20Instance;
+                        _b = [this.signer];
+                        return [4 /*yield*/, option.tokenR()];
+                    case 4: return [4 /*yield*/, _a.apply(void 0, _b.concat([_c.sent()]))];
+                    case 5:
+                        tokenR = _c.sent();
+                        return [4 /*yield*/, checkAllowance(this.signer, tokenR, trader.address, amount)];
                     case 6:
                         _c.sent();
                         _c.label = 7;
                     case 7:
-                        _c.trys.push([7, 10, , 11]);
-                        return [4 /*yield*/, this.contract()];
-                    case 8: return [4 /*yield*/, (_c.sent()).safeMint(option.address, parseEther(amount.toString()), account)];
+                        _c.trys.push([7, 9, , 10]);
+                        return [4 /*yield*/, trader.safeRedeem(address, parseEther(amount.toString()), account)];
+                    case 8:
+                        redeem = _c.sent();
+                        return [3 /*break*/, 10];
                     case 9:
-                        mint = _c.sent();
+                        err_3 = _c.sent();
+                        console.log({ err: err_3 });
+                        redeem = {};
+                        return [3 /*break*/, 10];
+                    case 10: return [2 /*return*/, redeem];
+                }
+            });
+        });
+    };
+    Trader.prototype.safeClose = function (address, amount) {
+        return __awaiter(this, void 0, void 0, function () {
+            var trader, account, option, tokenR, _a, _b, close, err_4;
+            return __generator(this, function (_c) {
+                switch (_c.label) {
+                    case 0: return [4 /*yield*/, this.contract()];
+                    case 1:
+                        trader = _c.sent();
+                        return [4 /*yield*/, web3_1.getAccount(this.signer)];
+                    case 2:
+                        account = _c.sent();
+                        return [4 /*yield*/, getOptionInstance(this.signer, address)];
+                    case 3:
+                        option = _c.sent();
+                        _a = getERC20Instance;
+                        _b = [this.signer];
+                        return [4 /*yield*/, option.tokenR()];
+                    case 4: return [4 /*yield*/, _a.apply(void 0, _b.concat([_c.sent()]))];
+                    case 5:
+                        tokenR = _c.sent();
+                        return [4 /*yield*/, checkAllowance(this.signer, tokenR, trader.address, amount)];
+                    case 6:
+                        _c.sent();
+                        return [4 /*yield*/, checkAllowance(this.signer, option, trader.address, amount)];
+                    case 7:
+                        _c.sent();
+                        _c.label = 8;
+                    case 8:
+                        _c.trys.push([8, 10, , 11]);
+                        return [4 /*yield*/, trader.safeClose(address, parseEther(amount.toString()), account)];
+                    case 9:
+                        close = _c.sent();
                         return [3 /*break*/, 11];
                     case 10:
-                        err_1 = _c.sent();
-                        console.log({ err: err_1 });
-                        mint = {};
+                        err_4 = _c.sent();
+                        console.error({ err: err_4 });
+                        close = {};
                         return [3 /*break*/, 11];
-                    case 11: return [2 /*return*/, mint];
+                    case 11: return [2 /*return*/, close];
                 }
             });
         });
     };
     return Trader;
 }());
+exports.Trader = Trader;
 function main() {
     return __awaiter(this, void 0, void 0, function () {
-        var provider, signer, Alice, trader, option, mint;
+        var provider, signer, Alice, option, trader, result;
         return __generator(this, function (_a) {
             switch (_a.label) {
                 case 0:
@@ -169,139 +298,15 @@ function main() {
                     return [4 /*yield*/, signer.connect(provider)];
                 case 1:
                     Alice = _a.sent();
-                    trader = new Trader(provider, Alice);
                     option = "0xf0481628ec335e0Cc0c0383866CfE88eE4a55c9D";
-                    return [4 /*yield*/, trader.safeMint(option, 1)];
+                    trader = new Trader(provider, Alice);
+                    return [4 /*yield*/, trader.safeRedeem(option, 1)];
                 case 2:
-                    mint = _a.sent();
-                    console.log(mint);
+                    result = _a.sent();
+                    console.log(result);
                     return [2 /*return*/];
             }
         });
     });
 }
-/* function main() {
-    const trader = new Trader(ethers.getDefaultProvider());
-    console.log("test", trader);
-} */
 main();
-/* const getPrimeTrader = async (signer: ethers.Signer, networkId: number): Promise<any> => {
-    const address: string = TOKENS_CONTEXT[networkId]["TRADER"].address;
-    const trader: any = await newInstance(signer, PrimeTrader.abi, address);
-    return trader;
-};
-
-const safeExercise = async (
-    signer: ethers.Signer,
-    index: number,
-    amount: number
-): Promise<Object> => {
-    const networkId: number = await getNetwork(signer);
-    const trader: any = await getPrimeTrader(signer, networkId);
-    const account: string = await getAccount(signer);
-    const tokenP: string = await getOptionAddress(signer, networkId, index);
-    const option: any = await getOptionInstanceWithAddress(signer, tokenP);
-    const tokenS: any = await getERC20Instance(signer, await option.methods.tokenS().call());
-    await checkAllowance(signer, tokenS, account, trader._address, amount);
-    await checkAllowance(signer, option, account, trader._address, amount);
-    let inTokenS: BN = new BN(toWei(signer, amount));
-    let inTokenP: number = Number(
-        inTokenS
-            .mul(new BN(await option.methods.base().call()))
-            .div(new BN(await option.methods.price().call()))
-    );
-    let exercise: Object;
-    console.log(inTokenS.toString(), inTokenP.toString());
-    try {
-        exercise = await trader.methods.safeSwap(tokenP, inTokenS.toString(), account).send({
-            from: account,
-        });
-    } catch (err) {
-        console.error({ err });
-        exercise = {};
-    }
-
-    return exercise;
-};
-
-const safeMint = async (signer: ethers.Signer, index: number, amount: number): Promise<Object> => {
-    console.log(amount);
-    const networkId: number = await getNetwork(signer);
-    const trader: any = await getPrimeTrader(signer, networkId);
-    const account: string = await getAccount(signer);
-    const tokenP: string = await getOptionAddress(signer, networkId, index);
-    const option: any = await getOptionInstanceWithAddress(signer, tokenP);
-    const tokenU: any = await getERC20Instance(signer, await option.methods.tokenU().call());
-    await checkAllowance(signer, tokenU, account, trader._address, amount);
-    let write: Object;
-    try {
-        write = await trader.methods.safeMint(tokenP, toWei(signer, new BN(amount)), account).send({
-            from: account,
-        });
-    } catch (err) {
-        console.log({ err });
-        write = {};
-    }
-
-    return write;
-};
-
-const safeRedeem = async (
-    signer: ethers.Signer,
-    index: number,
-    amount: number
-): Promise<Object> => {
-    const networkId: number = await getNetwork(signer);
-    const trader: any = await getPrimeTrader(signer, networkId);
-    const account: string = await getAccount(signer);
-    const tokenP: string = await getOptionAddress(signer, networkId, index);
-    const option: any = await getOptionInstanceWithAddress(signer, tokenP);
-    const tokenR: any = await getERC20Instance(signer, await option.methods.tokenR().call());
-    await checkAllowance(signer, tokenR, account, trader._address, amount);
-    let redeem: Object;
-    console.log(amount);
-    console.log(
-        index,
-        await option.methods.name().call(),
-        tokenP,
-        trader._address,
-        account,
-        toWei(signer, amount)
-    );
-    try {
-        redeem = await trader.methods
-            .safeRedeem(tokenP, toWei(signer, new BN(amount)), account)
-            .send({
-                from: account,
-            });
-    } catch (err) {
-        console.log({ err });
-        redeem = {};
-    }
-
-    return redeem;
-};
-
-const safeClose = async (signer: ethers.Signer, index: number, amount: number): Promise<Object> => {
-    const networkId: number = await getNetwork(signer);
-    const trader: any = await getPrimeTrader(signer, networkId);
-    const account: string = await getAccount(signer);
-    const tokenP: string = await getOptionAddress(signer, networkId, index);
-    const option: any = await getOptionInstanceWithAddress(signer, tokenP);
-    const tokenR: any = await getERC20Instance(signer, await option.methods.tokenR().call());
-    await checkAllowance(signer, tokenR, account, trader._address, amount);
-    await checkAllowance(signer, option, account, trader._address, amount);
-    let close: Object;
-    try {
-        close = await trader.methods.safeClose(tokenP, toWei(signer, amount), account).send({
-            from: account,
-        });
-    } catch (err) {
-        console.error({ err });
-        close = {};
-    }
-
-    return close;
-};
-
-export { getPrimeTrader, safeExercise, safeMint, safeRedeem, safeClose }; */

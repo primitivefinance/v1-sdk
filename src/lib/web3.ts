@@ -135,5 +135,4 @@ export {
     getContractInstance,
     newInstance,
     getBalance,
-    /* getInstance, */
 };

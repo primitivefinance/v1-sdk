@@ -1,19 +1,10 @@
-/* import { getOptionAddress, getOptionInstanceWithAddress } from "./prime";
-import { checkAllowance, getERC20Instance } from "./ERC20";
-import { TOKENS_CONTEXT } from "./constants";
-import { newInstance, getAccount, toWei, getNetwork } from "./web3";
-import BN from "bn.js"; */
-
-/* const PrimeTrader = require("@primitivefi/contracts/artifacts/PrimeTrader.json"); */
+import { ethers, BigNumberish } from "ethers";
+import { getAccount } from "./web3";
 const PrimeTraderDeployed = require("../artifacts/trader.js");
 const ERC20 = require("../artifacts/erc20.js");
 const PrimeOption = require("../artifacts/PrimeOption.js");
-import { ethers, ContractInterface, BigNumberish } from "ethers";
-import { getAccount } from "./web3";
 const { parseEther } = ethers.utils;
 const TestMnemonic: string = process.env.TEST_MNEMONIC ? process.env.TEST_MNEMONIC : "";
-
-console.log("starting class");
 
 const getERC20Instance = async (
     signer: ethers.Signer,
@@ -41,7 +32,7 @@ const checkAllowance = async (
     if (allowance <= amount) await tokenU.approve(spender, amount);
 };
 
-class Trader {
+export class Trader {
     provider: ethers.providers.Provider;
     signer: ethers.Signer;
     constructor(provider: ethers.providers.Provider, signer: ethers.Signer) {
@@ -65,24 +56,73 @@ class Trader {
     }
 
     async safeMint(address: string, amount: number): Promise<Object> {
+        const trader: any = await this.contract();
         const account: string = await getAccount(this.signer);
         const option: ethers.Contract = await getOptionInstance(this.signer, address);
-        const underlying: string = await option.tokenU({ from: this.signer.getAddress() });
+        const underlying: string = await option.tokenU();
         const tokenU: any = await getERC20Instance(this.signer, underlying);
-        await checkAllowance(this.signer, tokenU, await this.address(), amount);
+        await checkAllowance(this.signer, tokenU, trader.address, amount);
         let mint: Object;
         try {
-            mint = await (await this.contract()).safeMint(
-                option.address,
-                parseEther(amount.toString()),
-                account
-            );
+            mint = await trader.safeMint(option.address, parseEther(amount.toString()), account);
         } catch (err) {
             console.log({ err });
             mint = {};
         }
-
         return mint;
+    }
+
+    async safeExercise(address: string, amount: number): Promise<Object> {
+        const trader: any = await this.contract();
+        const account: string = await getAccount(this.signer);
+        const option: ethers.Contract = await getOptionInstance(this.signer, address);
+        const tokenS: any = await getERC20Instance(this.signer, await option.tokenS());
+        await checkAllowance(this.signer, tokenS, trader.address, amount);
+        await checkAllowance(this.signer, option, trader.address, amount);
+        let inTokenS: BigNumberish = parseEther(amount.toString());
+        let inTokenP: number = Number(inTokenS.mul(await option.base()).div(await option.price()));
+        let exercise: Object;
+        try {
+            exercise = await trader.safeExercise(address, inTokenS.toString(), account);
+        } catch (err) {
+            console.error({ err });
+            exercise = {};
+        }
+
+        return exercise;
+    }
+
+    async safeRedeem(address: string, amount: number): Promise<Object> {
+        const trader: any = await this.contract();
+        const account: string = await getAccount(this.signer);
+        const option: ethers.Contract = await getOptionInstance(this.signer, address);
+        const tokenR: any = await getERC20Instance(this.signer, await option.tokenR());
+        await checkAllowance(this.signer, tokenR, trader.address, amount);
+        let redeem: Object;
+        try {
+            redeem = await trader.safeRedeem(address, parseEther(amount.toString()), account);
+        } catch (err) {
+            console.log({ err });
+            redeem = {};
+        }
+        return redeem;
+    }
+
+    async safeClose(address: string, amount: number): Promise<Object> {
+        const trader: any = await this.contract();
+        const account: string = await getAccount(this.signer);
+        const option: ethers.Contract = await getOptionInstance(this.signer, address);
+        const tokenR: any = await getERC20Instance(this.signer, await option.tokenR());
+        await checkAllowance(this.signer, tokenR, trader.address, amount);
+        await checkAllowance(this.signer, option, trader.address, amount);
+        let close: Object;
+        try {
+            close = await trader.safeClose(address, parseEther(amount.toString()), account);
+        } catch (err) {
+            console.error({ err });
+            close = {};
+        }
+        return close;
     }
 }
 
@@ -90,135 +130,10 @@ async function main() {
     const provider = ethers.getDefaultProvider("rinkeby");
     const signer = ethers.Wallet.fromMnemonic(TestMnemonic);
     const Alice = await signer.connect(provider);
-    const trader = new Trader(provider, Alice);
     const option: string = "0xf0481628ec335e0Cc0c0383866CfE88eE4a55c9D";
-    const mint = await trader.safeMint(option, 1);
-    console.log(mint);
+    const trader = new Trader(provider, Alice);
+    const result = await trader.safeRedeem(option, 1);
+    console.log(result);
 }
 
-/* function main() {
-    const trader = new Trader(ethers.getDefaultProvider());
-    console.log("test", trader);
-} */
 main();
-
-/* const getPrimeTrader = async (signer: ethers.Signer, networkId: number): Promise<any> => {
-    const address: string = TOKENS_CONTEXT[networkId]["TRADER"].address;
-    const trader: any = await newInstance(signer, PrimeTrader.abi, address);
-    return trader;
-};
-
-const safeExercise = async (
-    signer: ethers.Signer,
-    index: number,
-    amount: number
-): Promise<Object> => {
-    const networkId: number = await getNetwork(signer);
-    const trader: any = await getPrimeTrader(signer, networkId);
-    const account: string = await getAccount(signer);
-    const tokenP: string = await getOptionAddress(signer, networkId, index);
-    const option: any = await getOptionInstanceWithAddress(signer, tokenP);
-    const tokenS: any = await getERC20Instance(signer, await option.methods.tokenS().call());
-    await checkAllowance(signer, tokenS, account, trader._address, amount);
-    await checkAllowance(signer, option, account, trader._address, amount);
-    let inTokenS: BN = new BN(toWei(signer, amount));
-    let inTokenP: number = Number(
-        inTokenS
-            .mul(new BN(await option.methods.base().call()))
-            .div(new BN(await option.methods.price().call()))
-    );
-    let exercise: Object;
-    console.log(inTokenS.toString(), inTokenP.toString());
-    try {
-        exercise = await trader.methods.safeSwap(tokenP, inTokenS.toString(), account).send({
-            from: account,
-        });
-    } catch (err) {
-        console.error({ err });
-        exercise = {};
-    }
-
-    return exercise;
-};
-
-const safeMint = async (signer: ethers.Signer, index: number, amount: number): Promise<Object> => {
-    console.log(amount);
-    const networkId: number = await getNetwork(signer);
-    const trader: any = await getPrimeTrader(signer, networkId);
-    const account: string = await getAccount(signer);
-    const tokenP: string = await getOptionAddress(signer, networkId, index);
-    const option: any = await getOptionInstanceWithAddress(signer, tokenP);
-    const tokenU: any = await getERC20Instance(signer, await option.methods.tokenU().call());
-    await checkAllowance(signer, tokenU, account, trader._address, amount);
-    let write: Object;
-    try {
-        write = await trader.methods.safeMint(tokenP, toWei(signer, new BN(amount)), account).send({
-            from: account,
-        });
-    } catch (err) {
-        console.log({ err });
-        write = {};
-    }
-
-    return write;
-};
-
-const safeRedeem = async (
-    signer: ethers.Signer,
-    index: number,
-    amount: number
-): Promise<Object> => {
-    const networkId: number = await getNetwork(signer);
-    const trader: any = await getPrimeTrader(signer, networkId);
-    const account: string = await getAccount(signer);
-    const tokenP: string = await getOptionAddress(signer, networkId, index);
-    const option: any = await getOptionInstanceWithAddress(signer, tokenP);
-    const tokenR: any = await getERC20Instance(signer, await option.methods.tokenR().call());
-    await checkAllowance(signer, tokenR, account, trader._address, amount);
-    let redeem: Object;
-    console.log(amount);
-    console.log(
-        index,
-        await option.methods.name().call(),
-        tokenP,
-        trader._address,
-        account,
-        toWei(signer, amount)
-    );
-    try {
-        redeem = await trader.methods
-            .safeRedeem(tokenP, toWei(signer, new BN(amount)), account)
-            .send({
-                from: account,
-            });
-    } catch (err) {
-        console.log({ err });
-        redeem = {};
-    }
-
-    return redeem;
-};
-
-const safeClose = async (signer: ethers.Signer, index: number, amount: number): Promise<Object> => {
-    const networkId: number = await getNetwork(signer);
-    const trader: any = await getPrimeTrader(signer, networkId);
-    const account: string = await getAccount(signer);
-    const tokenP: string = await getOptionAddress(signer, networkId, index);
-    const option: any = await getOptionInstanceWithAddress(signer, tokenP);
-    const tokenR: any = await getERC20Instance(signer, await option.methods.tokenR().call());
-    await checkAllowance(signer, tokenR, account, trader._address, amount);
-    await checkAllowance(signer, option, account, trader._address, amount);
-    let close: Object;
-    try {
-        close = await trader.methods.safeClose(tokenP, toWei(signer, amount), account).send({
-            from: account,
-        });
-    } catch (err) {
-        console.error({ err });
-        close = {};
-    }
-
-    return close;
-};
-
-export { getPrimeTrader, safeExercise, safeMint, safeRedeem, safeClose }; */
