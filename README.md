@@ -1,2 +1,3 @@
 # primitive-sdk
-An SDK for the Primitive Protocol.
+
+An open-source sdk for the Primitive protocol.
