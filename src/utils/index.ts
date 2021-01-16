@@ -31,3 +31,4 @@ export const INFURA_PREFIXES: { [key: number]: string } = {
 }
 
 export * from '../utils'
+export * from './executeTransaction'
