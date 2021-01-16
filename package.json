@@ -1,6 +1,6 @@
 {
   "name": "@primitivefi/sdk",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "private": false,
   "repository": {
     "type": "git",
@@ -8,17 +8,17 @@
   },
   "dependencies": {
     "@ethersproject/providers": "^5.0.5",
-    "@primitivefi/v1-connectors": "1.2.2",
     "@primitivefi/contracts": "0.4.4",
+    "@primitivefi/v1-connectors": "1.2.2",
+    "@uniswap/v2-core": "^1.0.1",
+    "@uniswap/v2-periphery": "^1.1.0-beta.0",
     "bignumber.js": "^9.0.0",
     "bn.js": "^5.1.1",
     "ethers": "^5.0.2",
     "numeral": "^2.0.6",
     "prettier": "^2.1.2",
     "web3": "^1.2.6",
-    "web3modal": "^1.5.0",
-    "@uniswap/v2-core": "^1.0.1",
-    "@uniswap/v2-periphery": "^1.1.0-beta.0"
+    "web3modal": "^1.5.0"
   },
   "devDependencies": {
     "@types/jest": "^26.0.7",
