@@ -2,7 +2,6 @@ import { Token, TokenAmount, Pair, Fraction } from '@uniswap/sdk'
 import ethers, { BigNumber, BigNumberish } from 'ethers'
 import { parseEther } from 'ethers/lib/utils'
 import { Option } from './option'
-import isZero from '@/utils/isZero'
 import { Operation } from '../constants'
 
 export class Market extends Pair {

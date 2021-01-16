@@ -3,7 +3,7 @@ import OptionArtifact from '@primitivefi/contracts/artifacts/Option.json'
 import { formatEther, parseEther } from 'ethers/lib/utils'
 import { ChainId, Pair, Token, TokenAmount } from '@uniswap/sdk'
 import { STABLECOINS, ADDRESS_ZERO } from '../constants'
-import isZero from '@/utils/isZero'
+import isZero from '../utils/isZero'
 
 export interface OptionParameters {
   base: TokenAmount
