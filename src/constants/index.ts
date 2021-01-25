@@ -93,6 +93,9 @@ export const getIconForMarket = (key) => {
 
 export const ADDRESS_ZERO = '0x0000000000000000000000000000000000000000'
 export const UNI_ROUTER_ADDRESS = '0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D'
+export const SUSHI_ROUTER_ADDRESS = '0xd9e1cE17f2641f24aE83637ab66a2cca9C378B9F'
+export const SUSHI_FACTORY_ADDRESS =
+  '0xC0AEe478e3658e2610c5F7A4A2E1777cE9e4f2Ac'
 
 export const STABLECOINS: { [key: number]: Token } = {
   1: new Token(
@@ -113,6 +116,10 @@ export const STABLECOINS: { [key: number]: Token } = {
 
 export const UNISWAP_CONNECTOR: { [key: number]: string } = {
   1: UniswapConnector.address, // FIX
+  4: UniswapConnectorTestnet.address,
+}
+export const SUSHISWAP_CONNECTOR: { [key: number]: string } = {
+  1: '0xb026991da22f7D8F51550D5f99C39DdBc1c02089', // FIX
   4: UniswapConnectorTestnet.address,
 }
 
@@ -156,4 +163,12 @@ export enum Operation {
   NEW_MARKET,
   NONE,
   APPROVE,
+}
+
+export enum Venue {
+  UNISWAP,
+  SUSHISWAP,
+  BALANCER,
+  SHELL,
+  CURVE,
 }

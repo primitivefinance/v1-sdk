@@ -4,7 +4,7 @@ import { parseEther } from 'ethers/lib/utils'
 import { Option } from './option'
 import { Operation } from '../constants'
 
-export class Market extends Pair {
+export class UniswapMarket extends Pair {
   public readonly option: Option
   public constructor(
     option: Option,

@@ -12,6 +12,7 @@ import UniswapV2Factory from '@uniswap/v2-core/build/UniswapV2Factory.json'
 import { Token, TokenAmount } from '@uniswap/sdk'
 import MultiCall from './multicall'
 import { FACTORY_ADDRESS } from '@uniswap/sdk'
+import { Venue, SUSHI_FACTORY_ADDRESS } from './constants'
 
 /**
  * Methods for asyncronously getting on-chain data and returning SDK classes using the data.
@@ -120,9 +121,15 @@ export class Protocol {
 
   public static async getPairsFromMultiCall(
     provider,
-    tokensArray
+    tokensArray,
+    venue?: Venue
   ): Promise<any> {
     const multi = new MultiCall(provider)
+    const factoryAddress = venue
+      ? venue === Venue.SUSHISWAP
+        ? SUSHI_FACTORY_ADDRESS
+        : FACTORY_ADDRESS
+      : FACTORY_ADDRESS
 
     const chunks = Protocol.chunkArray(tokensArray, 10)
     const datas = []
@@ -131,7 +138,7 @@ export class Protocol {
       const inputs = []
       for (const tokenArray of chunk) {
         inputs.push({
-          target: FACTORY_ADDRESS,
+          target: factoryAddress,
           function: 'getPair',
           args: [tokenArray[0], tokenArray[1]],
         })

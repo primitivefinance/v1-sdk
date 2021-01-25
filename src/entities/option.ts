@@ -1,18 +1,22 @@
 import ethers, { BigNumberish, BigNumber } from 'ethers'
 import OptionArtifact from '@primitivefi/contracts/artifacts/Option.json'
 import { formatEther, parseEther } from 'ethers/lib/utils'
-import { ChainId, Pair, Token, TokenAmount } from '@uniswap/sdk'
+import { ChainId, Token, TokenAmount } from '@uniswap/sdk'
+import * as UniswapSDK from '@uniswap/sdk'
+import * as SushiSwapSDK from '@sushiswap/sdk'
 import { STABLECOINS, ADDRESS_ZERO } from '../constants'
 import isZero from '../utils/isZero'
 
 export interface OptionParameters {
-  base: TokenAmount
-  quote: TokenAmount
+  base: UniswapSDK.TokenAmount | SushiSwapSDK.TokenAmount
+  quote: UniswapSDK.TokenAmount | SushiSwapSDK.TokenAmount
   expiry: number
 }
 
 export const EMPTY_ASSET: Token = new Token(1, ADDRESS_ZERO, 18)
-export const EMPTY_TOKEN_AMOUNT: TokenAmount = new TokenAmount(EMPTY_ASSET, '')
+export const EMPTY_TOKEN_AMOUNT:
+  | UniswapSDK.TokenAmount
+  | SushiSwapSDK.TokenAmount = new TokenAmount(EMPTY_ASSET, '')
 export const EMPTY_OPTION_PARAMETERS: OptionParameters = {
   base: EMPTY_TOKEN_AMOUNT,
   quote: EMPTY_TOKEN_AMOUNT,
@@ -39,7 +43,7 @@ export const createOptionEntityWithAddress = (
 export class Option extends Token {
   public readonly optionParameters: OptionParameters
   public tokenAddresses: string[]
-  public pair: Pair
+  public pair: UniswapSDK.Pair | SushiSwapSDK.Pair
   public constructor(
     optionParameters: OptionParameters,
     chainId: number,
@@ -60,28 +64,39 @@ export class Option extends Token {
     return new ethers.Contract(this.address, OptionArtifact.abi, signer)
   }
 
-  public get pairAddress(): string {
-    const address: string = Pair.getAddress(this.underlying, this.redeem)
+  public get uniswapPairAddress(): string {
+    const address: string = UniswapSDK.Pair.getAddress(
+      this.underlying,
+      this.redeem
+    )
     return address
   }
 
-  public setPair(pair: Pair) {
+  public get sushiswapPairAddress(): string {
+    const address: string = SushiSwapSDK.Pair.getAddress(
+      this.underlying,
+      this.redeem
+    )
+    return address
+  }
+
+  public setPair(pair: UniswapSDK.Pair | SushiSwapSDK.Pair) {
     this.pair = pair
   }
 
-  public get underlying(): Token {
+  public get underlying(): UniswapSDK.Token | SushiSwapSDK.Token {
     return this.optionParameters.base.token
   }
 
-  public get strike(): Token {
+  public get strike(): UniswapSDK.Token | SushiSwapSDK.Token {
     return this.optionParameters.quote.token
   }
 
-  public get baseValue(): TokenAmount {
+  public get baseValue(): UniswapSDK.TokenAmount | SushiSwapSDK.TokenAmount {
     return this.optionParameters.base
   }
 
-  public get quoteValue(): TokenAmount {
+  public get quoteValue(): UniswapSDK.TokenAmount | SushiSwapSDK.TokenAmount {
     return this.optionParameters.quote
   }
 
@@ -89,7 +104,7 @@ export class Option extends Token {
     return this.optionParameters.expiry
   }
 
-  public get redeem(): Token {
+  public get redeem(): UniswapSDK.Token | SushiSwapSDK.Token {
     return new Token(
       this.chainId,
       this.tokenAddresses[2],

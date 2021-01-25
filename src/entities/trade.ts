@@ -1,7 +1,8 @@
 import ethers, { BigNumberish, BigNumber } from 'ethers'
-import { Option, Market } from './index'
-import { Operation } from '../constants/index'
-import { TokenAmount } from '@uniswap/sdk'
+import { Option, SushiSwapMarket, UniswapMarket } from './index'
+import { Operation, Venue } from '../constants/index'
+import * as UniswapSDK from '@uniswap/sdk'
+import * as SushiSwapSDK from '@sushiswap/sdk'
 import UniswapV2Pair from '@uniswap/v2-core/build/UniswapV2Pair.json'
 import { parseEther } from 'ethers/lib/utils'
 
@@ -9,21 +10,23 @@ import { parseEther } from 'ethers/lib/utils'
  * @dev Represents a trade for an option in a market.
  */
 export class Trade {
+  public readonly venue: Venue
   public readonly option: Option
-  public readonly market: Market
+  public readonly market: SushiSwapMarket | UniswapMarket
   public readonly totalSupply: BigNumberish
-  public inputAmount: TokenAmount
-  public outputAmount: TokenAmount
+  public inputAmount: UniswapSDK.TokenAmount | SushiSwapSDK.TokenAmount
+  public outputAmount: UniswapSDK.TokenAmount | SushiSwapSDK.TokenAmount
   public readonly operation: Operation
   public readonly signer: ethers.Signer
 
   public constructor(
     option: Option,
-    market: Market,
+    market: SushiSwapMarket | UniswapMarket,
     totalSupply: BigNumberish,
-    inputAmount: TokenAmount,
-    outputAmount: TokenAmount,
+    inputAmount: UniswapSDK.TokenAmount | SushiSwapSDK.TokenAmount,
+    outputAmount: UniswapSDK.TokenAmount | SushiSwapSDK.TokenAmount,
     operation: Operation,
+    venue: Venue,
     signer: ethers.Signer
   ) {
     this.option = option
@@ -32,6 +35,7 @@ export class Trade {
     this.inputAmount = inputAmount
     this.outputAmount = outputAmount
     this.operation = operation
+    this.venue = venue
     this.signer = signer
   }
 
@@ -39,15 +43,15 @@ export class Trade {
    * @dev Gets the underlyingToken cost to purchase long option tokens.
    * @notice We use outputAmount because the path is redeem -> underlying, where we borrow underlying and pay back redeem.
    */
-  public get openPremium(): TokenAmount {
+  public get openPremium(): UniswapSDK.TokenAmount | SushiSwapSDK.TokenAmount {
     return this.market.getOpenPremium(this.outputAmount)
   }
 
-  public get closePremium(): TokenAmount {
+  public get closePremium(): UniswapSDK.TokenAmount | SushiSwapSDK.TokenAmount {
     return this.market.getClosePremium(this.outputAmount)
   }
 
-  public get shortPremium(): TokenAmount {
+  public get shortPremium(): UniswapSDK.TokenAmount | SushiSwapSDK.TokenAmount {
     return this.market.getShortPremium(this.outputAmount)
   }
 
@@ -84,7 +88,9 @@ export class Trade {
     return formattedValue
   }
 
-  public maximumAmountIn(slippagePercent: string): TokenAmount {
+  public maximumAmountIn(
+    slippagePercent: string
+  ): UniswapSDK.TokenAmount | SushiSwapSDK.TokenAmount {
     if (this.operation === Operation.CLOSE_SHORT) {
       return this.inputAmount
     }
@@ -93,10 +99,16 @@ export class Trade {
     const one = ethers.BigNumber.from(1000)
     const slippageAdjustedValue = amountIn.mul(one.add(slippage)).div(1000)
     const formattedValue = slippageAdjustedValue
-    return new TokenAmount(this.inputAmount.token, formattedValue.toString())
+    const SDK = this.venue === Venue.UNISWAP ? UniswapSDK : SushiSwapSDK
+    return new SDK.TokenAmount(
+      this.inputAmount.token,
+      formattedValue.toString()
+    )
   }
 
-  public minimumAmountOut(slippagePercent: string): TokenAmount {
+  public minimumAmountOut(
+    slippagePercent: string
+  ): UniswapSDK.TokenAmount | SushiSwapSDK.TokenAmount {
     if (this.operation === Operation.LONG) {
       return this.outputAmount
     }
@@ -105,7 +117,11 @@ export class Trade {
     const one = ethers.BigNumber.from(1000)
     const slippageAdjustedValue = amountIn.mul(one.sub(slippage)).div(1000)
     const formattedValue = slippageAdjustedValue
-    return new TokenAmount(this.outputAmount.token, formattedValue.toString())
+    const SDK = this.venue === Venue.UNISWAP ? UniswapSDK : SushiSwapSDK
+    return new SDK.TokenAmount(
+      this.outputAmount.token,
+      formattedValue.toString()
+    )
   }
 
   public sortTokens = (tokenA: string, tokenB: string): string[] => {
