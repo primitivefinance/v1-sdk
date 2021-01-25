@@ -1557,6 +1557,19 @@
   dependencies:
     type-detect "4.0.8"
 
+"@sushiswap/sdk@^3.0.2":
+  version "3.0.2"
+  resolved "https://registry.yarnpkg.com/@sushiswap/sdk/-/sdk-3.0.2.tgz#2d8db96168bf4b224edfc33b1404742431aa3726"
+  integrity sha512-cuI2NGd6V6R00nj70MmJZi9/LoRD0Wjz0ytDRajWrRq8ohO5/CNsQRuQyezCqgJkPklENT6UzJ05rX+eVMuKcA==
+  dependencies:
+    "@uniswap/v2-core" "^1.0.0"
+    big.js "^5.2.2"
+    decimal.js-light "^2.5.0"
+    jsbi "^3.1.1"
+    tiny-invariant "^1.1.0"
+    tiny-warning "^1.0.3"
+    toformat "^2.0.0"
+
 "@szmarczak/http-timer@^1.1.2":
   version "1.1.2"
   resolved "https://registry.yarnpkg.com/@szmarczak/http-timer/-/http-timer-1.1.2.tgz#b1665e2c461a2cd92f4c1bbf50d5454de0d4b421"

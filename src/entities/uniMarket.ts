@@ -5,7 +5,7 @@ import { Option } from './option'
 import isZero from '@/utils/isZero'
 import { Operation } from '../constants'
 
-export class Market extends Pair {
+export class UniswapMarket extends Pair {
   public readonly option: Option
   public constructor(
     option: Option,

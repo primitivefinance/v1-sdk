@@ -4,14 +4,15 @@ import RegistryTestnet from '@primitivefi/contracts/deployments/rinkeby/Registry
 import ethers, { BigNumberish, BigNumber } from 'ethers'
 import { parseEther } from 'ethers/lib/utils'
 import { STABLECOINS } from '../constants'
-import { Token } from '@uniswap/sdk'
+import * as UniswapSDK from '@uniswap/sdk'
+import * as SushiSwapSDK from '@sushiswap/sdk'
 
 export const REGISTRY_ADDRESS: { [key: number]: string } = {
   1: RegistryMainnet.address,
   4: RegistryTestnet.address,
 }
 
-export interface OptionParameters {
+interface OptionParameters {
   base: string
   quote: string
   baseValue: BigNumber
@@ -46,7 +47,7 @@ export class Registry {
     return parseEther('1')
   }
 
-  get stablecoin(): Token {
+  get stablecoin(): UniswapSDK.Token | SushiSwapSDK.Token {
     return this.dai
   }
 
