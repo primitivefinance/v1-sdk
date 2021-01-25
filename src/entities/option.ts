@@ -5,7 +5,7 @@ import { ChainId, Token, TokenAmount } from '@uniswap/sdk'
 import * as UniswapSDK from '@uniswap/sdk'
 import * as SushiSwapSDK from '@sushiswap/sdk'
 import { STABLECOINS, ADDRESS_ZERO } from '../constants'
-import isZero from '@/utils/isZero'
+import isZero from '../utils/isZero'
 
 export interface OptionParameters {
   base: UniswapSDK.TokenAmount | SushiSwapSDK.TokenAmount

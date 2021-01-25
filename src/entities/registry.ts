@@ -12,7 +12,11 @@ export const REGISTRY_ADDRESS: { [key: number]: string } = {
   4: RegistryTestnet.address,
 }
 
+<<<<<<< HEAD
 interface OptionParameters {
+=======
+export interface FullOptionParameters {
+>>>>>>> 1768ef859894b99c3e79ec5e50ae15fcf6eaa6b9
   base: string
   quote: string
   baseValue: BigNumber
@@ -51,7 +55,7 @@ export class Registry {
     return this.dai
   }
 
-  public getOptionAddressTx(optionParameters: OptionParameters): TxPayload {
+  public getOptionAddressTx(optionParameters: FullOptionParameters): TxPayload {
     const method = 'getOptionAddress'
     const contract = this.contract
     const args = Registry.getArgs(optionParameters)
@@ -60,7 +64,7 @@ export class Registry {
     return { method, contract, args, value, isView }
   }
 
-  public static getArgs(optionParameters: OptionParameters): string[] {
+  public static getArgs(optionParameters: FullOptionParameters): string[] {
     const args = [
       optionParameters.base,
       optionParameters.quote,
@@ -71,7 +75,7 @@ export class Registry {
     return args
   }
 
-  public deployTx(optionParameters: OptionParameters): TxPayload {
+  public deployTx(optionParameters: FullOptionParameters): TxPayload {
     const method = 'deployOption'
     const contract = this.contract
     const args = Registry.getArgs(optionParameters)
@@ -85,7 +89,7 @@ export class Registry {
     strikePrice: BigNumber,
     strikeDate: number,
     isCall: boolean
-  ): OptionParameters {
+  ): FullOptionParameters {
     const base = underlyingToken
     const quote = this.dai
     const baseValue = isCall ? this.baseValue : strikePrice
