@@ -115,7 +115,6 @@ export class Trader {
           )
           methodName = 'safeCloseForETH'
         } else {
-          console.log(trade.option.getTimeToExpiry())
           if (trade.option.getTimeToExpiry() <= 0) {
             methodName = 'safeUnwind'
           } else {

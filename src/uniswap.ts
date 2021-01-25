@@ -1,11 +1,14 @@
-import { Operation } from './constants'
-import { Trade, Market, Option } from './entities'
+import { Operation, Venue } from './constants'
+import { Trade } from './entities'
 import ethers, { BigNumberish, BigNumber } from 'ethers'
 import UniswapV2Router02 from '@uniswap/v2-periphery/build/UniswapV2Router02.json'
-import { UNI_ROUTER_ADDRESS } from './constants'
+import {
+  UNI_ROUTER_ADDRESS,
+  SUSHI_ROUTER_ADDRESS,
+  SUSHISWAP_CONNECTOR,
+  UNISWAP_CONNECTOR,
+} from './constants'
 import UniswapConnector from '@primitivefi/v1-connectors/deployments/live/UniswapConnector03.json'
-import UniswapConnectorTestnet from '@primitivefi/v1-connectors/deployments/rinkeby/UniswapConnector03.json'
-import UniswapConnectorMainnet from '@primitivefi/v1-connectors/deployments/live/UniswapConnector03.json'
 import { TradeSettings, SinglePositionParameters } from './types'
 import { parseEther } from 'ethers/lib/utils'
 import isZero from '@/utils/isZero'
@@ -21,10 +24,25 @@ export class Uniswap {
     trade: Trade,
     tradeSettings: TradeSettings
   ): SinglePositionParameters {
-    const uniswapConnectorAddress =
-      trade.option.chainId === 1
-        ? UniswapConnectorMainnet.address
-        : UniswapConnectorTestnet.address
+    const venue = trade.venue
+    const chainId = trade.option.chainId
+    let connectorAddress: string
+    let routerAddress: string
+
+    switch (venue) {
+      case Venue.UNISWAP:
+        connectorAddress = UNISWAP_CONNECTOR[chainId]
+        routerAddress = UNI_ROUTER_ADDRESS
+        break
+      case Venue.SUSHISWAP:
+        connectorAddress = SUSHISWAP_CONNECTOR[chainId]
+        routerAddress = SUSHI_ROUTER_ADDRESS
+        break
+      default:
+        connectorAddress = SUSHISWAP_CONNECTOR[chainId]
+        routerAddress = SUSHI_ROUTER_ADDRESS
+        break
+    }
 
     let contract: ethers.Contract
     let methodName: string
@@ -48,14 +66,14 @@ export class Uniswap {
         : tradeSettings.deadline.toString()
     const to: string = tradeSettings.receiver
 
-    const UniswapV2Router02Contract = new ethers.Contract(
-      UNI_ROUTER_ADDRESS,
+    const RouterContract = new ethers.Contract(
+      routerAddress,
       UniswapV2Router02.abi,
       trade.signer
     )
 
-    const UniswapConnector03Contract = new ethers.Contract(
-      uniswapConnectorAddress,
+    const ConnectorContract = new ethers.Contract(
+      connectorAddress,
       UniswapConnector.abi,
       trade.signer
     )
@@ -71,7 +89,7 @@ export class Uniswap {
             tradeSettings.slippage
           )
           .toString()
-        contract = UniswapConnector03Contract
+        contract = ConnectorContract
         methodName = 'openFlashLong'
         args = [trade.option.address, outputAmount.raw.toString(), premium]
         value = '0'
@@ -84,7 +102,7 @@ export class Uniswap {
           trade.inputAmount.token.address,
           trade.outputAmount.token.address,
         ]
-        contract = UniswapV2Router02Contract
+        contract = RouterContract
         methodName = 'swapTokensForExactTokens'
         args = [
           trade.outputAmount.raw.toString(),
@@ -100,7 +118,7 @@ export class Uniswap {
         if (BigNumber.from(minPayout).lte(0) || isZero(minPayout)) {
           minPayout = '1'
         }
-        contract = UniswapConnector03Contract
+        contract = ConnectorContract
         methodName = 'mintOptionsThenFlashCloseLong'
         args = [
           trade.option.address,
@@ -117,7 +135,7 @@ export class Uniswap {
           minPayout = '1'
         }
 
-        contract = UniswapConnector03Contract
+        contract = ConnectorContract
         methodName = 'closeFlashLong'
         args = [
           trade.option.address,
@@ -136,7 +154,7 @@ export class Uniswap {
           trade.inputAmount.token.address,
           trade.outputAmount.token.address,
         ]
-        contract = UniswapV2Router02Contract
+        contract = RouterContract
         methodName = 'swapExactTokensForTokens'
         args = [amountIn, amountOutMin, path, to, deadline]
         value = '0'
@@ -181,7 +199,7 @@ export class Uniswap {
           amountBDesired,
           tradeSettings.slippage
         )
-        contract = UniswapConnector03Contract
+        contract = ConnectorContract
         methodName = 'addShortLiquidityWithUnderlying'
         args = [
           trade.option.address,
@@ -205,7 +223,7 @@ export class Uniswap {
           amountBDesired,
           tradeSettings.slippage
         )
-        contract = UniswapV2Router02Contract
+        contract = RouterContract
         methodName = 'addLiquidity'
         args = [
           trade.inputAmount.token.address,
@@ -239,7 +257,7 @@ export class Uniswap {
           amountBMin.toString(),
           tradeSettings.slippage
         )
-        contract = UniswapV2Router02Contract
+        contract = RouterContract
         methodName = 'removeLiquidity'
         args = [
           trade.inputAmount.token.address,
@@ -272,7 +290,7 @@ export class Uniswap {
           amountBMin.toString(),
           tradeSettings.slippage
         )
-        contract = UniswapConnector03Contract
+        contract = ConnectorContract
         methodName = 'removeShortLiquidityThenCloseOptions'
         args = [
           trade.option.address,
