@@ -12,7 +12,7 @@ export const REGISTRY_ADDRESS: { [key: number]: string } = {
   4: RegistryTestnet.address,
 }
 
-interface OptionParameters {
+interface FullOptionParameters {
   base: string
   quote: string
   baseValue: BigNumber
