@@ -241,12 +241,12 @@ export class Uniswap {
         amountAMin = isZero(trade.totalSupply)
           ? BigNumber.from('0')
           : BigNumber.from(inputAmount.raw.toString())
-              .mul(trade.market.reserve0.raw.toString())
+              .mul(trade.market.reserveOf(inputAmount.token).raw.toString())
               .div(trade.totalSupply)
         amountBMin = isZero(trade.totalSupply)
           ? BigNumber.from('0')
           : BigNumber.from(inputAmount.raw.toString())
-              .mul(trade.market.reserve1.raw.toString())
+              .mul(trade.market.reserveOf(outputAmount.token).raw.toString())
               .div(trade.totalSupply)
 
         amountAMin = trade.calcMinimumOutSlippage(
@@ -271,15 +271,21 @@ export class Uniswap {
         value = '0'
         break
       case Operation.REMOVE_LIQUIDITY_CLOSE:
+        const redeemToken = trade.option.redeem
+        const underlyingToken = trade.option.underlying
+        const redeemReserve = trade.market.reserveOf(redeemToken)
+        const underlyingReserve = trade.market.reserveOf(underlyingToken)
+        // should always be redeem
         amountAMin = isZero(trade.totalSupply)
           ? BigNumber.from('0')
           : BigNumber.from(inputAmount.raw.toString())
-              .mul(trade.market.reserve0.raw.toString())
+              .mul(redeemReserve.raw.toString())
               .div(trade.totalSupply)
+        // should always be underlying
         amountBMin = isZero(trade.totalSupply)
           ? BigNumber.from('0')
           : BigNumber.from(inputAmount.raw.toString())
-              .mul(trade.market.reserve1.raw.toString())
+              .mul(underlyingReserve.raw.toString())
               .div(trade.totalSupply)
 
         amountAMin = trade.calcMinimumOutSlippage(
