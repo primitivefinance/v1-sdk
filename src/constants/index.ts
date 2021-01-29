@@ -119,7 +119,7 @@ export const UNISWAP_CONNECTOR: { [key: number]: string } = {
   4: UniswapConnectorTestnet.address,
 }
 export const SUSHISWAP_CONNECTOR: { [key: number]: string } = {
-  1: '0xb026991da22f7D8F51550D5f99C39DdBc1c02089', // FIX
+  1: '0x9Daec8D56CDCBDE72abe65F4a5daF8cc0A5bF2f9', // FIX
   4: UniswapConnectorTestnet.address,
 }
 
