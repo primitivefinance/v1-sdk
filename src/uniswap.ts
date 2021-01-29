@@ -11,7 +11,7 @@ import {
 import UniswapConnector from '@primitivefi/v1-connectors/deployments/live/UniswapConnector03.json'
 import { TradeSettings, SinglePositionParameters } from './types'
 import { parseEther } from 'ethers/lib/utils'
-import isZero from '@/utils/isZero'
+import isZero from './utils/isZero'
 import { TokenAmount } from '@uniswap/sdk'
 
 /**

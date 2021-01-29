@@ -1,7 +1,7 @@
 import { BigNumber } from 'ethers'
 import { parseUnits } from '@ethersproject/units'
 
-export function tryParseAmount(value?: string): BigNumber | undefined {
+function tryParseAmount(value?: string): BigNumber | undefined {
   if (
     !value ||
     value === '0' ||
@@ -27,3 +27,5 @@ export function tryParseAmount(value?: string): BigNumber | undefined {
     return BigNumber.from(typedValueParsed)
   }
 }
+
+export default tryParseAmount
