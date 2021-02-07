@@ -160,9 +160,6 @@ export class Uniswap {
         value = '0'
         break
       case Operation.ADD_LIQUIDITY:
-        const strikeRatio = trade.option.proportionalShort(
-          trade.option.baseValue.raw.toString()
-        )
         const redeemReserves = trade.market.reserveOf(trade.option.redeem)
         const underlyingReserves = trade.market.reserveOf(
           trade.option.underlying
@@ -170,7 +167,9 @@ export class Uniswap {
         const hasLiquidity = trade.market.hasLiquidity
         const denominator = !hasLiquidity
           ? 0
-          : strikeRatio
+          : BigNumber.from(trade.option.quoteValue.raw.toString())
+              .mul(parseEther('1'))
+              .div(trade.option.baseValue.raw.toString())
               .mul(underlyingReserves.raw.toString())
               .div(redeemReserves.raw.toString())
               .add(parseEther('1'))
@@ -241,12 +240,12 @@ export class Uniswap {
         amountAMin = isZero(trade.totalSupply)
           ? BigNumber.from('0')
           : BigNumber.from(inputAmount.raw.toString())
-              .mul(trade.market.reserve0.raw.toString())
+              .mul(trade.market.reserveOf(inputAmount.token).raw.toString())
               .div(trade.totalSupply)
         amountBMin = isZero(trade.totalSupply)
           ? BigNumber.from('0')
           : BigNumber.from(inputAmount.raw.toString())
-              .mul(trade.market.reserve1.raw.toString())
+              .mul(trade.market.reserveOf(outputAmount.token).raw.toString())
               .div(trade.totalSupply)
 
         amountAMin = trade.calcMinimumOutSlippage(
@@ -271,15 +270,21 @@ export class Uniswap {
         value = '0'
         break
       case Operation.REMOVE_LIQUIDITY_CLOSE:
+        const redeemToken = trade.option.redeem
+        const underlyingToken = trade.option.underlying
+        const redeemReserve = trade.market.reserveOf(redeemToken)
+        const underlyingReserve = trade.market.reserveOf(underlyingToken)
+        // should always be redeem
         amountAMin = isZero(trade.totalSupply)
           ? BigNumber.from('0')
           : BigNumber.from(inputAmount.raw.toString())
-              .mul(trade.market.reserve0.raw.toString())
+              .mul(redeemReserve.raw.toString())
               .div(trade.totalSupply)
+        // should always be underlying
         amountBMin = isZero(trade.totalSupply)
           ? BigNumber.from('0')
           : BigNumber.from(inputAmount.raw.toString())
-              .mul(trade.market.reserve1.raw.toString())
+              .mul(underlyingReserve.raw.toString())
               .div(trade.totalSupply)
 
         amountAMin = trade.calcMinimumOutSlippage(

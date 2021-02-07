@@ -256,10 +256,9 @@ export class UniswapMarket extends Pair {
   public getOptionsAddedAsLiquidity = (
     inputAmount: TokenAmount
   ): TokenAmount => {
-    const ratio = this.option.proportionalShort(
-      this.option.baseValue.raw.toString()
-    )
-    const denominator = ratio
+    const denominator = BigNumber.from(this.option.quoteValue.raw.toString())
+      .mul(parseEther('1'))
+      .div(this.option.baseValue.raw.toString())
       .mul(this.reserveOf(this.option.underlying).raw.toString())
       .div(this.reserveOf(this.option.redeem).raw.toString())
       .add(parseEther('1'))
@@ -271,34 +270,6 @@ export class UniswapMarket extends Pair {
     return new TokenAmount(this.option.underlying, optionsInput.toString())
   }
 
-  public getLiquidityValuePerShare = (
-    totalSupply: TokenAmount,
-    feeOn = false,
-    kLast?: BigNumberish
-  ): [TokenAmount, TokenAmount, TokenAmount] => {
-    const shortValue = this.getLiquidityValue(
-      this.option.redeem,
-      new TokenAmount(this.liquidityToken, totalSupply.raw.toString()),
-      new TokenAmount(this.liquidityToken, parseEther('1').toString())
-    )
-
-    const underlyingValue = this.getLiquidityValue(
-      this.option.underlying,
-      new TokenAmount(this.liquidityToken, totalSupply.raw.toString()),
-      new TokenAmount(this.liquidityToken, parseEther('1').toString())
-    )
-
-    const totalUnderlyingValue = new TokenAmount(
-      this.option.underlying,
-      BigNumber.from(shortValue.raw.toString())
-        .mul(this.option.baseValue.raw.toString())
-        .div(this.option.quoteValue.raw.toString())
-        .add(underlyingValue.raw.toString())
-        .toString()
-    )
-
-    return [shortValue, underlyingValue, totalUnderlyingValue]
-  }
   public get hasLiquidity(): boolean {
     const reserve0Liquidity: boolean = this.reserve0.greaterThan('0')
     const reserve1Liquidity: boolean = this.reserve1.greaterThan('0')
