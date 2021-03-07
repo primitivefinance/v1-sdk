@@ -1,18 +1,18 @@
 import { Operation, Venue } from './constants'
 import { Trade } from './entities'
-import ethers, { BigNumberish, BigNumber, Contract, Wallet } from 'ethers'
-import UniswapV2Router02 from '@uniswap/v2-periphery/build/UniswapV2Router02.json'
+import ethers, { BigNumberish, BigNumber, Contract } from 'ethers'
 import {
   UNI_ROUTER_ADDRESS,
   SUSHI_ROUTER_ADDRESS,
   SUSHISWAP_CONNECTOR,
   UNISWAP_CONNECTOR,
 } from './constants'
-import UniswapConnector from '@primitivefi/v1-connectors/deployments/live/UniswapConnector03.json'
+import UniswapV2Router02 from '@uniswap/v2-periphery/build/UniswapV2Router02.json'
+import SushiSwapConnector from '@primitivefi/v1-connectors/deployments/live/UniswapConnector03.json'
 import { TradeSettings, SinglePositionParameters } from './types'
 import { parseEther } from 'ethers/lib/utils'
 import isZero from './utils/isZero'
-import { TokenAmount } from '@uniswap/sdk'
+import { TokenAmount } from '@sushiswap/sdk'
 
 export const getParams = (
   instance: Contract,
@@ -25,7 +25,7 @@ export const getParams = (
 /**
  * Represents the UniswapConnector contract.
  */
-export class Uniswap {
+export class SushiSwap {
   private constructor() {}
 
   public static singlePositionCallParameters(
@@ -66,6 +66,13 @@ export class Uniswap {
     let path: string[]
     let minPayout
 
+    const router: Contract = new ethers.Contract(
+      routerAddress,
+      UniswapV2Router02.abi, // FIX
+      trade.signer
+    )
+    const method: string = 'executeCall'
+
     const deadline =
       tradeSettings.timeLimit > 0
         ? (
@@ -82,7 +89,25 @@ export class Uniswap {
 
     const ConnectorContract = new ethers.Contract(
       connectorAddress,
-      UniswapConnector.abi,
+      SushiSwapConnector.abi,
+      trade.signer
+    )
+
+    const Core = new ethers.Contract(
+      connectorAddress,
+      SushiSwapConnector.abi,
+      trade.signer
+    )
+
+    const Swaps = new ethers.Contract(
+      connectorAddress,
+      SushiSwapConnector.abi,
+      trade.signer
+    )
+
+    const Liquidity = new ethers.Contract(
+      connectorAddress,
+      SushiSwapConnector.abi,
       trade.signer
     )
 
@@ -91,16 +116,30 @@ export class Uniswap {
 
     switch (trade.operation) {
       case Operation.LONG:
-        let premium: BigNumberish = trade
-          .calcMaximumInSlippage(
-            trade.openPremium.raw.toString(),
-            tradeSettings.slippage
-          )
-          .toString()
-        contract = ConnectorContract
-        methodName = 'openFlashLong'
-        args = [trade.option.address, outputAmount.raw.toString(), premium]
-        value = '0'
+        let premium: BigNumberish = trade.calcMaximumInSlippage(
+          trade.openPremium.raw.toString(),
+          tradeSettings.slippage
+        )
+        let params: string = ''
+
+        if (trade.option.isWethCall) {
+          let fn = 'openFlashLongWithETH'
+          let fnArgs = [trade.option.address, outputAmount.raw.toString()]
+          params = getParams(Swaps, fn, fnArgs)
+          value = premium.toString()
+        } else {
+          let fn = 'openFlashLong'
+          let fnArgs = [
+            trade.option.address,
+            outputAmount.raw.toString(),
+            premium.toString(),
+          ]
+          params = getParams(Swaps, fn, fnArgs)
+          value = '0'
+        }
+        contract = router // calls the router's `executeCall` function with the encoded params.
+        methodName = 'executeCall'
+        args = [Swaps.address, params]
         break
       case Operation.SHORT:
         let amountInMax = trade
@@ -118,22 +157,6 @@ export class Uniswap {
           path,
           to,
           deadline,
-        ]
-        value = '0'
-        break
-      case Operation.WRITE:
-        minPayout = trade.closePremium.raw.toString()
-        if (BigNumber.from(minPayout).lte(0) || isZero(minPayout)) {
-          minPayout = '1'
-        }
-        contract = ConnectorContract
-        methodName = 'mintOptionsThenFlashCloseLong'
-        args = [
-          trade.option.address,
-          trade.option
-            .proportionalLong(trade.outputAmount.raw.toString())
-            .toString(),
-          minPayout.toString(),
         ]
         value = '0'
         break
