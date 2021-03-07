@@ -25,7 +25,7 @@ export class Trade {
   public outputAmount: UniswapSDK.TokenAmount | SushiSwapSDK.TokenAmount
   public readonly operation: Operation
   public readonly signer: ethers.Signer
-  public readonly signitureData: SignitureData
+  public readonly signitureData: SignitureData | null
 
   public constructor(
     option: Option,

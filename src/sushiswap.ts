@@ -1,4 +1,4 @@
-import { Operation, Venue } from './constants'
+import { Operation, STABLECOINS, Venue } from './constants'
 import { Trade } from './entities'
 import ethers, { BigNumberish, BigNumber, Contract } from 'ethers'
 import {
@@ -12,7 +12,7 @@ import SushiSwapConnector from '@primitivefi/v1-connectors/deployments/live/Unis
 import { TradeSettings, SinglePositionParameters } from './types'
 import { parseEther } from 'ethers/lib/utils'
 import isZero from './utils/isZero'
-import { TokenAmount } from '@sushiswap/sdk'
+import { TokenAmount, WETH } from '@sushiswap/sdk'
 
 export const getParams = (
   instance: Contract,
@@ -126,6 +126,24 @@ export class SushiSwap {
           let fnArgs = [trade.option.address, outputAmount.raw.toString()]
           params = getParams(Swaps, fn, fnArgs)
           value = premium.toString()
+        } else if (trade.signitureData !== null) {
+          let under: string = trade.option.underlying.address
+          let dai: string = STABLECOINS[chainId].address
+          let fn: string =
+            under === dai
+              ? 'openFlashLongWithDaiPermit'
+              : 'openFlashLongWithPermit'
+          let fnArgs = [
+            trade.option.address,
+            outputAmount.raw.toString(),
+            premium.toString(),
+            trade.signitureData.deadline,
+            trade.signitureData.v,
+            trade.signitureData.r,
+            trade.signitureData.s,
+          ]
+          params = getParams(Swaps, fn, fnArgs)
+          value = '0'
         } else {
           let fn = 'openFlashLong'
           let fnArgs = [
@@ -164,14 +182,19 @@ export class SushiSwap {
         if (BigNumber.from(minPayout).lte(0) || isZero(minPayout)) {
           minPayout = '1'
         }
-
-        contract = ConnectorContract
-        methodName = 'closeFlashLong'
-        args = [
+        let under: string = trade.option.underlying.address
+        let weth: string = WETH[chainId].address
+        let fn = under === weth ? 'closeFlashLongForETH' : 'closeFlashLong'
+        let fnArgs = [
           trade.option.address,
           trade.outputAmount.raw.toString(),
           minPayout.toString(), // IMPORTANT: IF THIS VALUE IS 0, IT WILL COST THE USER TO CLOSE (NEGATIVE PAYOUT)
         ]
+        params = getParams(Swaps, fn, fnArgs)
+
+        contract = router // calls the router's `executeCall` function with the encoded params.
+        methodName = 'executeCall'
+        args = [Swaps.address, params]
         value = '0'
         break
       case Operation.CLOSE_SHORT:
@@ -228,17 +251,53 @@ export class SushiSwap {
           amountBDesired,
           tradeSettings.slippage
         )
-        contract = ConnectorContract
-        methodName = 'addShortLiquidityWithUnderlying'
-        args = [
-          trade.option.address,
-          optionsInput.toString(), // make sure this isnt amountADesired, amountADesired is the quantity for the internal function
-          amountBDesired.toString(),
-          amountBMin.toString(),
-          to,
-          deadline,
-        ]
-        value = '0'
+
+        under = trade.option.underlying.address
+        weth = WETH[chainId].address
+
+        if (trade.signitureData !== null) {
+          let dai: string = STABLECOINS[chainId].address
+          fn =
+            under === dai
+              ? 'addShortLiquidityWithUnderlyingWithDaiPermit'
+              : 'addShortLiquidityWithUnderlyingWithPermit'
+          fnArgs = [
+            trade.option.address,
+            optionsInput.toString(), // make sure this isnt amountADesired, amountADesired is the quantity for the internal function
+            amountBDesired.toString(),
+            amountBMin.toString(),
+            to,
+            deadline,
+            trade.signitureData.v,
+            trade.signitureData.r,
+            trade.signitureData.s,
+          ]
+        } else if (under === weth) {
+          fn = 'addShortLiquidityWithETH'
+          fnArgs = [
+            trade.option.address,
+            optionsInput.toString(), // make sure this isnt amountADesired, amountADesired is the quantity for the internal function
+            amountBDesired.toString(),
+            amountBMin.toString(),
+            to,
+            deadline,
+          ]
+          value = optionsInput.add(amountBDesired).toString()
+        } else {
+          fn = 'addShortLiquidityWithUnderlying'
+          fnArgs = [
+            trade.option.address,
+            optionsInput.toString(), // make sure this isnt amountADesired, amountADesired is the quantity for the internal function
+            amountBDesired.toString(),
+            amountBMin.toString(),
+            to,
+            deadline,
+          ]
+        }
+
+        contract = router
+        methodName = 'executeCall'
+        args = [Liquidity.address, params]
         break
       case Operation.ADD_LIQUIDITY_CUSTOM:
         // amount of redeems that will be minted and added to the pool
@@ -325,16 +384,36 @@ export class SushiSwap {
           amountBMin.toString(),
           tradeSettings.slippage
         )
-        contract = ConnectorContract
-        methodName = 'removeShortLiquidityThenCloseOptions'
-        args = [
-          trade.option.address,
-          trade.inputAmount.raw.toString(),
-          amountAMin.toString(),
-          amountBMin.toString(),
-          to,
-          deadline,
-        ]
+        if (trade.signitureData !== null) {
+          fn = 'removeShortLiquidityThenCloseOptionsWithPermit'
+          fnArgs = [
+            trade.option.address,
+            trade.inputAmount.raw.toString(),
+            amountAMin.toString(),
+            amountBMin.toString(),
+            to,
+            deadline,
+            trade.signitureData.v,
+            trade.signitureData.r,
+            trade.signitureData.s,
+          ]
+        } else {
+          fn = 'removeShortLiquidityThenCloseOptions'
+          fnArgs = [
+            trade.option.address,
+            trade.inputAmount.raw.toString(),
+            amountAMin.toString(),
+            amountBMin.toString(),
+            to,
+            deadline,
+          ]
+        }
+
+        params = getParams(Liquidity, fn, fnArgs)
+
+        contract = router
+        methodName = 'executeCall'
+        args = [Liquidity.address, params]
         value = '0'
         break
     }
