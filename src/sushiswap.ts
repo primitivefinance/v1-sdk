@@ -4,15 +4,16 @@ import ethers, { BigNumberish, BigNumber, Contract } from 'ethers'
 import {
   UNI_ROUTER_ADDRESS,
   SUSHI_ROUTER_ADDRESS,
-  SUSHISWAP_CONNECTOR,
-  UNISWAP_CONNECTOR,
+  PRIMITIVE_ROUTER,
+  SWAPS,
+  LIQUIDITY,
+  WETH9,
 } from './constants'
 import UniswapV2Router02 from '@uniswap/v2-periphery/build/UniswapV2Router02.json'
-import SushiSwapConnector from '@primitivefi/v1-connectors/deployments/live/UniswapConnector03.json'
 import { TradeSettings, SinglePositionParameters } from './types'
 import { parseEther } from 'ethers/lib/utils'
 import isZero from './utils/isZero'
-import { TokenAmount, WETH } from '@sushiswap/sdk'
+import { TokenAmount } from '@sushiswap/sdk'
 
 export const getParams = (
   instance: Contract,
@@ -34,21 +35,22 @@ export class SushiSwap {
   ): SinglePositionParameters {
     const venue = trade.venue
     const chainId = trade.option.chainId
-    let connectorAddress: string
-    let routerAddress: string
+    const PrimitiveRouter: Contract = new ethers.Contract(
+      PRIMITIVE_ROUTER[chainId].address,
+      PRIMITIVE_ROUTER[chainId].abi,
+      trade.signer
+    )
+    let uniswapRouterAddress: string
 
     switch (venue) {
       case Venue.UNISWAP:
-        connectorAddress = UNISWAP_CONNECTOR[chainId]
-        routerAddress = UNI_ROUTER_ADDRESS
+        uniswapRouterAddress = UNI_ROUTER_ADDRESS
         break
       case Venue.SUSHISWAP:
-        connectorAddress = SUSHISWAP_CONNECTOR[chainId]
-        routerAddress = SUSHI_ROUTER_ADDRESS
+        uniswapRouterAddress = SUSHI_ROUTER_ADDRESS
         break
       default:
-        connectorAddress = SUSHISWAP_CONNECTOR[chainId]
-        routerAddress = SUSHI_ROUTER_ADDRESS
+        uniswapRouterAddress = SUSHI_ROUTER_ADDRESS
         break
     }
 
@@ -66,13 +68,6 @@ export class SushiSwap {
     let path: string[]
     let minPayout
 
-    const router: Contract = new ethers.Contract(
-      routerAddress,
-      UniswapV2Router02.abi, // FIX
-      trade.signer
-    )
-    const method: string = 'executeCall'
-
     const deadline =
       tradeSettings.timeLimit > 0
         ? (
@@ -81,33 +76,21 @@ export class SushiSwap {
         : tradeSettings.deadline.toString()
     const to: string = tradeSettings.receiver
 
-    const RouterContract = new ethers.Contract(
-      routerAddress,
+    const UniswapRouter = new ethers.Contract(
+      uniswapRouterAddress,
       UniswapV2Router02.abi,
       trade.signer
     )
 
-    const ConnectorContract = new ethers.Contract(
-      connectorAddress,
-      SushiSwapConnector.abi,
-      trade.signer
-    )
-
-    const Core = new ethers.Contract(
-      connectorAddress,
-      SushiSwapConnector.abi,
-      trade.signer
-    )
-
     const Swaps = new ethers.Contract(
-      connectorAddress,
-      SushiSwapConnector.abi,
+      SWAPS[chainId].address,
+      SWAPS[chainId].abi,
       trade.signer
     )
 
     const Liquidity = new ethers.Contract(
-      connectorAddress,
-      SushiSwapConnector.abi,
+      LIQUIDITY[chainId].address,
+      LIQUIDITY[chainId].abi,
       trade.signer
     )
 
@@ -127,11 +110,11 @@ export class SushiSwap {
           params = getParams(Swaps, fn, fnArgs)
           value = premium.toString()
         } else if (trade.signitureData !== null) {
-          let under: string = trade.option.underlying.address
+          let under = trade.option.underlying.address
           let dai: string = STABLECOINS[chainId].address
-          let fn: string =
+          let fn =
             under === dai
-              ? 'openFlashLongWithDaiPermit'
+              ? 'openFlashLongWithDAIPermit'
               : 'openFlashLongWithPermit'
           let fnArgs = [
             trade.option.address,
@@ -154,7 +137,7 @@ export class SushiSwap {
           params = getParams(Swaps, fn, fnArgs)
           value = '0'
         }
-        contract = router // calls the router's `executeCall` function with the encoded params.
+        contract = PrimitiveRouter // calls the PrimitiveRouter's `executeCall` function with the encoded params.
         methodName = 'executeCall'
         args = [Swaps.address, params]
         break
@@ -166,7 +149,7 @@ export class SushiSwap {
           trade.inputAmount.token.address,
           trade.outputAmount.token.address,
         ]
-        contract = RouterContract
+        contract = UniswapRouter
         methodName = 'swapTokensForExactTokens'
         args = [
           trade.outputAmount.raw.toString(),
@@ -183,7 +166,7 @@ export class SushiSwap {
           minPayout = '1'
         }
         let under: string = trade.option.underlying.address
-        let weth: string = WETH[chainId].address
+        let weth: string = WETH9[chainId].address
         let fn = under === weth ? 'closeFlashLongForETH' : 'closeFlashLong'
         let fnArgs = [
           trade.option.address,
@@ -192,7 +175,7 @@ export class SushiSwap {
         ]
         params = getParams(Swaps, fn, fnArgs)
 
-        contract = router // calls the router's `executeCall` function with the encoded params.
+        contract = PrimitiveRouter // calls the PrimitiveRouter's `executeCall` function with the encoded params.
         methodName = 'executeCall'
         args = [Swaps.address, params]
         value = '0'
@@ -207,7 +190,7 @@ export class SushiSwap {
           trade.inputAmount.token.address,
           trade.outputAmount.token.address,
         ]
-        contract = RouterContract
+        contract = UniswapRouter
         methodName = 'swapExactTokensForTokens'
         args = [amountIn, amountOutMin, path, to, deadline]
         value = '0'
@@ -253,7 +236,7 @@ export class SushiSwap {
         )
 
         under = trade.option.underlying.address
-        weth = WETH[chainId].address
+        weth = WETH9[chainId].address
 
         if (trade.signitureData !== null) {
           let dai: string = STABLECOINS[chainId].address
@@ -266,7 +249,6 @@ export class SushiSwap {
             optionsInput.toString(), // make sure this isnt amountADesired, amountADesired is the quantity for the internal function
             amountBDesired.toString(),
             amountBMin.toString(),
-            to,
             deadline,
             trade.signitureData.v,
             trade.signitureData.r,
@@ -279,7 +261,6 @@ export class SushiSwap {
             optionsInput.toString(), // make sure this isnt amountADesired, amountADesired is the quantity for the internal function
             amountBDesired.toString(),
             amountBMin.toString(),
-            to,
             deadline,
           ]
           value = optionsInput.add(amountBDesired).toString()
@@ -290,12 +271,11 @@ export class SushiSwap {
             optionsInput.toString(), // make sure this isnt amountADesired, amountADesired is the quantity for the internal function
             amountBDesired.toString(),
             amountBMin.toString(),
-            to,
             deadline,
           ]
         }
 
-        contract = router
+        contract = PrimitiveRouter
         methodName = 'executeCall'
         args = [Liquidity.address, params]
         break
@@ -311,7 +291,7 @@ export class SushiSwap {
           amountBDesired,
           tradeSettings.slippage
         )
-        contract = RouterContract
+        contract = UniswapRouter
         methodName = 'addLiquidity'
         args = [
           trade.inputAmount.token.address,
@@ -345,7 +325,7 @@ export class SushiSwap {
           amountBMin.toString(),
           tradeSettings.slippage
         )
-        contract = RouterContract
+        contract = UniswapRouter
         methodName = 'removeLiquidity'
         args = [
           trade.inputAmount.token.address,
@@ -353,8 +333,6 @@ export class SushiSwap {
           trade.inputAmount.raw.toString(),
           amountAMin.toString(),
           amountBMin.toString(),
-          to,
-          deadline,
         ]
         value = '0'
         break
@@ -391,7 +369,6 @@ export class SushiSwap {
             trade.inputAmount.raw.toString(),
             amountAMin.toString(),
             amountBMin.toString(),
-            to,
             deadline,
             trade.signitureData.v,
             trade.signitureData.r,
@@ -404,14 +381,12 @@ export class SushiSwap {
             trade.inputAmount.raw.toString(),
             amountAMin.toString(),
             amountBMin.toString(),
-            to,
-            deadline,
           ]
         }
 
         params = getParams(Liquidity, fn, fnArgs)
 
-        contract = router
+        contract = PrimitiveRouter
         methodName = 'executeCall'
         args = [Liquidity.address, params]
         value = '0'
