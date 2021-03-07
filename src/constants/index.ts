@@ -1,5 +1,6 @@
-import { ChainId, Token, WETH, FACTORY_ADDRESS } from '@uniswap/sdk'
+import { Deployment } from './types'
 import { parseEther } from 'ethers/lib/utils'
+import { ChainId, Token, WETH, FACTORY_ADDRESS } from '@uniswap/sdk'
 import Trader from '@primitivefi/contracts/deployments/live_1/Trader.json'
 import TraderTestnet from '@primitivefi/contracts/deployments/rinkeby/Trader.json'
 import Registry from '@primitivefi/contracts/deployments/live_1/Registry.json'
@@ -12,7 +13,6 @@ import PrimitiveSwaps from '@primitivefi/v1-connectors/deployments/live/Primitiv
 import PrimitiveSwapsTestnet from '@primitivefi/v1-connectors/deployments/rinkeby/PrimitiveSwaps.json'
 import PrimitiveLiquidity from '@primitivefi/v1-connectors/deployments/live/PrimitiveLiquidity.json'
 import PrimitiveLiquidityTestnet from '@primitivefi/v1-connectors/deployments/rinkeby/PrimitiveLiquidity.json'
-import { Deployment } from './types'
 
 export interface MarketMetadata {
   name: string
