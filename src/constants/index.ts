@@ -1,9 +1,18 @@
-import { ChainId, JSBI, Percent, Token, WETH } from '@uniswap/sdk'
+import { Deployment } from './types'
 import { parseEther } from 'ethers/lib/utils'
-import UniswapConnectorTestnet from '@primitivefi/v1-connectors/deployments/rinkeby/UniswapConnector03.json'
-import UniswapConnector from '@primitivefi/v1-connectors/deployments/live/UniswapConnector03.json'
+import { ChainId, Token, WETH, FACTORY_ADDRESS } from '@uniswap/sdk'
 import Trader from '@primitivefi/contracts/deployments/live_1/Trader.json'
 import TraderTestnet from '@primitivefi/contracts/deployments/rinkeby/Trader.json'
+import Registry from '@primitivefi/contracts/deployments/live_1/Registry.json'
+import RegistryTestnet from '@primitivefi/contracts/deployments/rinkeby/Registry.json'
+import PrimitiveRouter from '@primitivefi/v1-connectors/deployments/rinkeby/PrimitiveRouter.json' //FIX
+import PrimitiveRouterTestnet from '@primitivefi/v1-connectors/deployments/rinkeby/PrimitiveRouter.json'
+import PrimitiveCore from '@primitivefi/v1-connectors/deployments/rinkeby/PrimitiveCore.json' //FIX
+import PrimitiveCoreTestnet from '@primitivefi/v1-connectors/deployments/rinkeby/PrimitiveCore.json'
+import PrimitiveSwaps from '@primitivefi/v1-connectors/deployments/rinkeby/PrimitiveSwaps.json' //FIX
+import PrimitiveSwapsTestnet from '@primitivefi/v1-connectors/deployments/rinkeby/PrimitiveSwaps.json'
+import PrimitiveLiquidity from '@primitivefi/v1-connectors/deployments/rinkeby/PrimitiveLiquidity.json' //FIX
+import PrimitiveLiquidityTestnet from '@primitivefi/v1-connectors/deployments/rinkeby/PrimitiveLiquidity.json'
 
 export interface MarketMetadata {
   name: string
@@ -92,10 +101,19 @@ export const getIconForMarket = (key) => {
 }
 
 export const ADDRESS_ZERO = '0x0000000000000000000000000000000000000000'
+export const UNI_FACTORY_ADDRESS = FACTORY_ADDRESS
 export const UNI_ROUTER_ADDRESS = '0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D'
 export const SUSHI_ROUTER_ADDRESS = '0xd9e1cE17f2641f24aE83637ab66a2cca9C378B9F'
 export const SUSHI_FACTORY_ADDRESS =
   '0xC0AEe478e3658e2610c5F7A4A2E1777cE9e4f2Ac'
+
+export const TEST_DAI: Token = new Token(
+  ChainId.RINKEBY,
+  require('@primitivefi/v1-connectors/deployments/rinkeby/Dai.json').address,
+  18,
+  'DAI',
+  'Dai Stablecoin'
+)
 
 export const STABLECOINS: { [key: number]: Token } = {
   1: new Token(
@@ -105,27 +123,75 @@ export const STABLECOINS: { [key: number]: Token } = {
     'DAI',
     'Dai Stablecoin'
   ),
-  4: new Token(
-    ChainId.RINKEBY,
-    '0x49ac2A6588864375F0D194F5DA1BC87B9436E175',
-    18,
-    'DAI',
-    'Dai Stablecoin'
-  ),
+  4: TEST_DAI,
 }
 
-export const UNISWAP_CONNECTOR: { [key: number]: string } = {
-  1: UniswapConnector.address, // FIX
-  4: UniswapConnectorTestnet.address,
-}
-export const SUSHISWAP_CONNECTOR: { [key: number]: string } = {
-  1: '0x9Daec8D56CDCBDE72abe65F4a5daF8cc0A5bF2f9', // FIX
-  4: UniswapConnectorTestnet.address,
+export const TEST_WETH: Token = new Token(
+  ChainId.RINKEBY,
+  require('@primitivefi/contracts/deployments/rinkeby/WETH9.json').address,
+  18,
+  'WETH9',
+  'Wrapped Ether'
+)
+
+export const WETH9: { [key: number]: Token } = {
+  1: WETH[1],
+  3: WETH[3],
+  4: TEST_WETH,
+  5: WETH[5],
+  42: WETH[42],
 }
 
-export const TRADER: { [key: number]: string } = {
-  1: Trader.address, // FIX
-  4: TraderTestnet.address,
+export const TRADER: { [key: number]: Deployment } = {
+  1: Trader,
+  4: TraderTestnet,
+}
+
+export const REGISTRY: { [key: number]: any } = {
+  1: Registry,
+  4: RegistryTestnet,
+}
+
+export const PRIMITIVE_ROUTER: { [key: number]: Deployment } = {
+  1: PrimitiveRouter,
+  4: PrimitiveRouterTestnet,
+}
+
+export const CORE: { [key: number]: Deployment } = {
+  1: PrimitiveCore,
+  4: PrimitiveCoreTestnet,
+}
+
+export const SWAPS: { [key: number]: Deployment } = {
+  1: PrimitiveSwaps,
+  4: PrimitiveSwapsTestnet,
+}
+
+export const LIQUIDITY: { [key: number]: Deployment } = {
+  1: PrimitiveLiquidity,
+  4: PrimitiveLiquidityTestnet,
+}
+
+export const TEST_ETH_CALL: Token = new Token(
+  ChainId.RINKEBY,
+  '0xe17D3CdC8f0bcC6C36DEFe69DF477061a909eeDA',
+  18,
+  'PRM',
+  'Primitive V1 Option'
+)
+
+export const TEST_ETH_PUT: Token = new Token(
+  ChainId.RINKEBY,
+  '0xF7CecA0e43C24B8385f00aa1e1529aE35DDB5056',
+  18,
+  'PRM',
+  'Primitive V1 Option'
+)
+
+export const TEST_OPTIONS: { [asset: string]: { [key: number]: Token[] } } = {
+  eth: {
+    4: [TEST_ETH_CALL, TEST_ETH_PUT],
+  },
 }
 
 export const DEFAULT_STRIKE_LOW = 0.9
@@ -152,7 +218,6 @@ export enum Operation {
   UNWIND,
   LONG,
   SHORT,
-  WRITE,
   CLOSE_LONG,
   CLOSE_SHORT,
   NEUTRAL,
