@@ -172,6 +172,28 @@ export const LIQUIDITY: { [key: number]: Deployment } = {
   4: PrimitiveLiquidityTestnet,
 }
 
+export const TEST_ETH_CALL: Token = new Token(
+  ChainId.RINKEBY,
+  '0xe17D3CdC8f0bcC6C36DEFe69DF477061a909eeDA',
+  18,
+  'PRM',
+  'Primitive V1 Option'
+)
+
+export const TEST_ETH_PUT: Token = new Token(
+  ChainId.RINKEBY,
+  '0xF7CecA0e43C24B8385f00aa1e1529aE35DDB5056',
+  18,
+  'PRM',
+  'Primitive V1 Option'
+)
+
+export const TEST_OPTIONS: { [asset: string]: { [key: number]: Token[] } } = {
+  eth: {
+    4: [TEST_ETH_CALL, TEST_ETH_PUT],
+  },
+}
+
 export const DEFAULT_STRIKE_LOW = 0.9
 export const DEFAULT_STRIKE_MID = 1.0
 export const DEFAULT_STRIKE_HIGH = 1.1

@@ -1,31 +1,25 @@
-import { Operation, Venue } from './constants'
+import { Operation, STABLECOINS, Venue } from './constants'
 import { Trade } from './entities'
-import ethers, { BigNumberish, BigNumber, Contract, Wallet } from 'ethers'
-import UniswapV2Router02 from '@uniswap/v2-periphery/build/UniswapV2Router02.json'
+import ethers, { BigNumberish, BigNumber, Contract } from 'ethers'
 import {
   UNI_ROUTER_ADDRESS,
   SUSHI_ROUTER_ADDRESS,
-  SUSHISWAP_CONNECTOR,
-  UNISWAP_CONNECTOR,
+  PRIMITIVE_ROUTER,
+  SWAPS,
+  LIQUIDITY,
+  WETH9,
 } from './constants'
-import UniswapConnector from '@primitivefi/v1-connectors/deployments/live/UniswapConnector03.json'
+import UniswapV2Router02 from '@uniswap/v2-periphery/build/UniswapV2Router02.json'
 import { TradeSettings, SinglePositionParameters } from './types'
 import { parseEther } from 'ethers/lib/utils'
 import isZero from './utils/isZero'
-import { TokenAmount } from '@uniswap/sdk'
-
-export const getParams = (
-  instance: Contract,
-  method: string,
-  args: any[]
-): any => {
-  return instance.interface.encodeFunctionData(method, args)
-}
+import { TokenAmount } from '@sushiswap/sdk'
+import getParams from './utils/getParams'
 
 /**
  * Represents the UniswapConnector contract.
  */
-export class Uniswap {
+export class SushiSwap {
   private constructor() {}
 
   public static singlePositionCallParameters(
@@ -34,21 +28,22 @@ export class Uniswap {
   ): SinglePositionParameters {
     const venue = trade.venue
     const chainId = trade.option.chainId
-    let connectorAddress: string
-    let routerAddress: string
+    const PrimitiveRouter: Contract = new ethers.Contract(
+      PRIMITIVE_ROUTER[chainId].address,
+      PRIMITIVE_ROUTER[chainId].abi,
+      trade.signer
+    )
+    let uniswapRouterAddress: string
 
     switch (venue) {
       case Venue.UNISWAP:
-        connectorAddress = UNISWAP_CONNECTOR[chainId]
-        routerAddress = UNI_ROUTER_ADDRESS
+        uniswapRouterAddress = UNI_ROUTER_ADDRESS
         break
       case Venue.SUSHISWAP:
-        connectorAddress = SUSHISWAP_CONNECTOR[chainId]
-        routerAddress = SUSHI_ROUTER_ADDRESS
+        uniswapRouterAddress = SUSHI_ROUTER_ADDRESS
         break
       default:
-        connectorAddress = SUSHISWAP_CONNECTOR[chainId]
-        routerAddress = SUSHI_ROUTER_ADDRESS
+        uniswapRouterAddress = SUSHI_ROUTER_ADDRESS
         break
     }
 
@@ -74,15 +69,21 @@ export class Uniswap {
         : tradeSettings.deadline.toString()
     const to: string = tradeSettings.receiver
 
-    const RouterContract = new ethers.Contract(
-      routerAddress,
+    const UniswapRouter = new ethers.Contract(
+      uniswapRouterAddress,
       UniswapV2Router02.abi,
       trade.signer
     )
 
-    const ConnectorContract = new ethers.Contract(
-      connectorAddress,
-      UniswapConnector.abi,
+    const Swaps = new ethers.Contract(
+      SWAPS[chainId].address,
+      SWAPS[chainId].abi,
+      trade.signer
+    )
+
+    const Liquidity = new ethers.Contract(
+      LIQUIDITY[chainId].address,
+      LIQUIDITY[chainId].abi,
       trade.signer
     )
 
@@ -91,16 +92,47 @@ export class Uniswap {
 
     switch (trade.operation) {
       case Operation.LONG:
-        let premium: BigNumberish = trade
-          .calcMaximumInSlippage(
-            trade.openPremium.raw.toString(),
-            tradeSettings.slippage
-          )
-          .toString()
-        contract = ConnectorContract
-        methodName = 'openFlashLong'
-        args = [trade.option.address, outputAmount.raw.toString(), premium]
-        value = '0'
+        let premium: BigNumberish = trade.calcMaximumInSlippage(
+          trade.openPremium.raw.toString(),
+          tradeSettings.slippage
+        )
+        let params: string = ''
+        if (trade.option.isWethCall) {
+          let fn = 'openFlashLongWithETH'
+          let fnArgs = [trade.option.address, outputAmount.raw.toString()]
+          params = getParams(Swaps, fn, fnArgs)
+          value = premium.toString()
+        } else if (trade.signitureData !== null) {
+          let under = trade.option.underlying.address
+          let dai: string = STABLECOINS[chainId].address
+          let fn =
+            under === dai
+              ? 'openFlashLongWithDAIPermit'
+              : 'openFlashLongWithPermit'
+          let fnArgs = [
+            trade.option.address,
+            outputAmount.raw.toString(),
+            premium.toString(),
+            trade.signitureData.deadline,
+            trade.signitureData.v,
+            trade.signitureData.r,
+            trade.signitureData.s,
+          ]
+          params = getParams(Swaps, fn, fnArgs)
+          value = '0'
+        } else {
+          let fn = 'openFlashLong'
+          let fnArgs = [
+            trade.option.address,
+            outputAmount.raw.toString(),
+            premium.toString(),
+          ]
+          params = getParams(Swaps, fn, fnArgs)
+          value = '0'
+        }
+        contract = PrimitiveRouter // calls the PrimitiveRouter's `executeCall` function with the encoded params.
+        methodName = 'executeCall'
+        args = [Swaps.address, params]
         break
       case Operation.SHORT:
         let amountInMax = trade
@@ -110,7 +142,7 @@ export class Uniswap {
           trade.inputAmount.token.address,
           trade.outputAmount.token.address,
         ]
-        contract = RouterContract
+        contract = UniswapRouter
         methodName = 'swapTokensForExactTokens'
         args = [
           trade.outputAmount.raw.toString(),
@@ -121,35 +153,24 @@ export class Uniswap {
         ]
         value = '0'
         break
-      case Operation.WRITE:
-        minPayout = trade.closePremium.raw.toString()
-        if (BigNumber.from(minPayout).lte(0) || isZero(minPayout)) {
-          minPayout = '1'
-        }
-        contract = ConnectorContract
-        methodName = 'mintOptionsThenFlashCloseLong'
-        args = [
-          trade.option.address,
-          trade.option
-            .proportionalLong(trade.outputAmount.raw.toString())
-            .toString(),
-          minPayout.toString(),
-        ]
-        value = '0'
-        break
       case Operation.CLOSE_LONG:
         minPayout = trade.closePremium.raw.toString()
         if (BigNumber.from(minPayout).lte(0) || isZero(minPayout)) {
           minPayout = '1'
         }
-
-        contract = ConnectorContract
-        methodName = 'closeFlashLong'
-        args = [
+        let under: string = trade.option.underlying.address
+        let weth: string = WETH9[chainId].address
+        let fn = under === weth ? 'closeFlashLongForETH' : 'closeFlashLong'
+        let fnArgs = [
           trade.option.address,
           trade.outputAmount.raw.toString(),
           minPayout.toString(), // IMPORTANT: IF THIS VALUE IS 0, IT WILL COST THE USER TO CLOSE (NEGATIVE PAYOUT)
         ]
+        params = getParams(Swaps, fn, fnArgs)
+
+        contract = PrimitiveRouter // calls the PrimitiveRouter's `executeCall` function with the encoded params.
+        methodName = 'executeCall'
+        args = [Swaps.address, params]
         value = '0'
         break
       case Operation.CLOSE_SHORT:
@@ -162,7 +183,7 @@ export class Uniswap {
           trade.inputAmount.token.address,
           trade.outputAmount.token.address,
         ]
-        contract = RouterContract
+        contract = UniswapRouter
         methodName = 'swapExactTokensForTokens'
         args = [amountIn, amountOutMin, path, to, deadline]
         value = '0'
@@ -206,17 +227,50 @@ export class Uniswap {
           amountBDesired,
           tradeSettings.slippage
         )
-        contract = ConnectorContract
-        methodName = 'addShortLiquidityWithUnderlying'
-        args = [
-          trade.option.address,
-          optionsInput.toString(), // make sure this isnt amountADesired, amountADesired is the quantity for the internal function
-          amountBDesired.toString(),
-          amountBMin.toString(),
-          to,
-          deadline,
-        ]
-        value = '0'
+
+        under = trade.option.underlying.address
+        weth = WETH9[chainId].address
+
+        if (trade.signitureData !== null) {
+          let dai: string = STABLECOINS[chainId].address
+          fn =
+            under === dai
+              ? 'addShortLiquidityWithUnderlyingWithDaiPermit'
+              : 'addShortLiquidityWithUnderlyingWithPermit'
+          fnArgs = [
+            trade.option.address,
+            optionsInput.toString(), // make sure this isnt amountADesired, amountADesired is the quantity for the internal function
+            amountBDesired.toString(),
+            amountBMin.toString(),
+            deadline,
+            trade.signitureData.v,
+            trade.signitureData.r,
+            trade.signitureData.s,
+          ]
+        } else if (under === weth) {
+          fn = 'addShortLiquidityWithETH'
+          fnArgs = [
+            trade.option.address,
+            optionsInput.toString(), // make sure this isnt amountADesired, amountADesired is the quantity for the internal function
+            amountBDesired.toString(),
+            amountBMin.toString(),
+            deadline,
+          ]
+          value = optionsInput.add(amountBDesired).toString()
+        } else {
+          fn = 'addShortLiquidityWithUnderlying'
+          fnArgs = [
+            trade.option.address,
+            optionsInput.toString(), // make sure this isnt amountADesired, amountADesired is the quantity for the internal function
+            amountBDesired.toString(),
+            amountBMin.toString(),
+            deadline,
+          ]
+        }
+
+        contract = PrimitiveRouter
+        methodName = 'executeCall'
+        args = [Liquidity.address, params]
         break
       case Operation.ADD_LIQUIDITY_CUSTOM:
         // amount of redeems that will be minted and added to the pool
@@ -230,7 +284,7 @@ export class Uniswap {
           amountBDesired,
           tradeSettings.slippage
         )
-        contract = RouterContract
+        contract = UniswapRouter
         methodName = 'addLiquidity'
         args = [
           trade.inputAmount.token.address,
@@ -264,7 +318,7 @@ export class Uniswap {
           amountBMin.toString(),
           tradeSettings.slippage
         )
-        contract = RouterContract
+        contract = UniswapRouter
         methodName = 'removeLiquidity'
         args = [
           trade.inputAmount.token.address,
@@ -272,8 +326,6 @@ export class Uniswap {
           trade.inputAmount.raw.toString(),
           amountAMin.toString(),
           amountBMin.toString(),
-          to,
-          deadline,
         ]
         value = '0'
         break
@@ -303,16 +355,33 @@ export class Uniswap {
           amountBMin.toString(),
           tradeSettings.slippage
         )
-        contract = ConnectorContract
-        methodName = 'removeShortLiquidityThenCloseOptions'
-        args = [
-          trade.option.address,
-          trade.inputAmount.raw.toString(),
-          amountAMin.toString(),
-          amountBMin.toString(),
-          to,
-          deadline,
-        ]
+        if (trade.signitureData !== null) {
+          fn = 'removeShortLiquidityThenCloseOptionsWithPermit'
+          fnArgs = [
+            trade.option.address,
+            trade.inputAmount.raw.toString(),
+            amountAMin.toString(),
+            amountBMin.toString(),
+            deadline,
+            trade.signitureData.v,
+            trade.signitureData.r,
+            trade.signitureData.s,
+          ]
+        } else {
+          fn = 'removeShortLiquidityThenCloseOptions'
+          fnArgs = [
+            trade.option.address,
+            trade.inputAmount.raw.toString(),
+            amountAMin.toString(),
+            amountBMin.toString(),
+          ]
+        }
+
+        params = getParams(Liquidity, fn, fnArgs)
+
+        contract = PrimitiveRouter
+        methodName = 'executeCall'
+        args = [Liquidity.address, params]
         value = '0'
         break
     }
