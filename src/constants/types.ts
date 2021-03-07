@@ -27,13 +27,6 @@ export type Receipt = {
   cumulativeGasUsed: BigNumber | string | number
   gasUsed: BigNumber | string | number
   contractAddress?: string
-  to?: Address
-  logs?: Log[]
-  events?: any[]
-  logsBloom?: string
-  byzantium?: boolean
-  status?: number
-  confirmations?: number
 }
 
 export type DiamondFacets = Array<string> // TODO support Object for facet : {contract} // could be deploymentNames too ? or {abi,address}
@@ -73,11 +66,4 @@ export interface Deployment {
   bytecode?: string
   deployedBytecode?: string
   libraries?: Libraries
-  userdoc?: any
-  devdoc?: any
-  methodIdentifiers?: any
-  diamondCut?: FacetCut[]
-  facets?: FacetCut[]
-  storageLayout?: any
-  gasEstimates?: any
 }
