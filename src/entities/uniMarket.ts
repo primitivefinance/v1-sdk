@@ -207,10 +207,7 @@ export class UniswapMarket extends Pair {
           1) *
         100
       // sell long, Trade.getClosePremium
-    } else if (
-      orderType === Operation.CLOSE_LONG ||
-      orderType === Operation.WRITE
-    ) {
+    } else if (orderType === Operation.CLOSE_LONG) {
       spot = this.spotClosePremium
       const shortSize = this.option.proportionalShort(inputAmount)
       parsedAmount = new TokenAmount(this.option.redeem, shortSize.toString())

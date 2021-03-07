@@ -1,9 +1,9 @@
-import { Token, TokenAmount, Pair, Fraction } from '@sushiswap/sdk'
-import ethers, { BigNumber, BigNumberish } from 'ethers'
-import { parseEther } from 'ethers/lib/utils'
 import { Option } from './option'
 import isZero from '@/utils/isZero'
 import { Operation } from '../constants'
+import { parseEther } from 'ethers/lib/utils'
+import ethers, { BigNumber, BigNumberish } from 'ethers'
+import { Token, TokenAmount, Pair, Fraction } from '@sushiswap/sdk'
 
 export class SushiSwapMarket extends Pair {
   public readonly option: Option
@@ -208,10 +208,7 @@ export class SushiSwapMarket extends Pair {
           1) *
         100
       // sell long, Trade.getClosePremium
-    } else if (
-      orderType === Operation.CLOSE_LONG ||
-      orderType === Operation.WRITE
-    ) {
+    } else if (orderType === Operation.CLOSE_LONG) {
       spot = this.spotClosePremium
       const shortSize = this.option.proportionalShort(inputAmount)
       parsedAmount = new TokenAmount(this.option.redeem, shortSize.toString())

@@ -1,6 +1,3 @@
-import { Operation, STABLECOINS, Venue } from './constants'
-import { Trade } from './entities'
-import ethers, { BigNumberish, BigNumber, Contract } from 'ethers'
 import {
   UNI_ROUTER_ADDRESS,
   SUSHI_ROUTER_ADDRESS,
@@ -9,12 +6,15 @@ import {
   LIQUIDITY,
   WETH9,
 } from './constants'
-import UniswapV2Router02 from '@uniswap/v2-periphery/build/UniswapV2Router02.json'
-import { TradeSettings, SinglePositionParameters } from './types'
-import { parseEther } from 'ethers/lib/utils'
+import { Trade } from './entities'
 import isZero from './utils/isZero'
-import { TokenAmount } from '@sushiswap/sdk'
 import getParams from './utils/getParams'
+import { TokenAmount } from '@sushiswap/sdk'
+import { parseEther } from 'ethers/lib/utils'
+import { Operation, STABLECOINS, Venue } from './constants'
+import { TradeSettings, SinglePositionParameters } from './types'
+import ethers, { BigNumberish, BigNumber, Contract } from 'ethers'
+import UniswapV2Router02 from '@uniswap/v2-periphery/build/UniswapV2Router02.json'
 
 /**
  * Represents the UniswapConnector contract.

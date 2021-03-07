@@ -6,6 +6,13 @@ import * as SushiSwapSDK from '@sushiswap/sdk'
 import UniswapV2Pair from '@uniswap/v2-core/build/UniswapV2Pair.json'
 import { parseEther } from 'ethers/lib/utils'
 
+export interface SignitureData {
+  v: number
+  r: string
+  s: string
+  deadline: number
+}
+
 /**
  * @dev Represents a trade for an option in a market.
  */
@@ -18,6 +25,7 @@ export class Trade {
   public outputAmount: UniswapSDK.TokenAmount | SushiSwapSDK.TokenAmount
   public readonly operation: Operation
   public readonly signer: ethers.Signer
+  public readonly signitureData: SignitureData | null
 
   public constructor(
     option: Option,
@@ -27,7 +35,8 @@ export class Trade {
     outputAmount: UniswapSDK.TokenAmount | SushiSwapSDK.TokenAmount,
     operation: Operation,
     venue: Venue,
-    signer: ethers.Signer
+    signer: ethers.Signer,
+    signitureData: SignitureData
   ) {
     this.option = option
     this.market = market
@@ -37,6 +46,7 @@ export class Trade {
     this.operation = operation
     this.venue = venue
     this.signer = signer
+    this.signitureData = signitureData
   }
 
   /**

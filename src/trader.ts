@@ -1,13 +1,8 @@
 import ethers from 'ethers'
-import { Operation } from './constants'
 import { Trade } from './entities'
-import TraderArtifact from '@primitivefi/contracts/artifacts/Trader.json'
-import MainnetTrader from '@primitivefi/contracts/deployments/live_1/Trader.json'
-import TestnetTrader from '@primitivefi/contracts/deployments/rinkeby/Trader.json'
-import WethConnectorArtifact from '@primitivefi/contracts/artifacts/WethConnector01.json'
-//import MainnetWethConnector from '@primitivefi/contracts/deployments/live_1/WethConnector01.json'
-import TestnetWethConnector from '@primitivefi/contracts/deployments/rinkeby/WethConnector01.json'
+import getParams from './utils/getParams'
 import { TradeSettings, SinglePositionParameters } from './types'
+import { Operation, CORE, PRIMITIVE_ROUTER, TRADER } from './constants'
 
 /**
  * Represents the Primitive V1 Trader contract.
@@ -19,17 +14,24 @@ export class Trader {
     trade: Trade,
     tradeSettings: TradeSettings
   ): SinglePositionParameters {
-    const traderAddress =
-      trade.option.chainId == 1 ? MainnetTrader.address : TestnetTrader.address
-    const wethConnectorAddress =
-      trade.option.chainId == 1
-        ? TestnetWethConnector.address // fix when mainnet is deployed
-        : TestnetWethConnector.address
-    let contract = new ethers.Contract(
-      traderAddress,
-      TraderArtifact.abi,
+    const chainId: number = trade.option.chainId
+    const PrimitiveRouter: ethers.Contract = new ethers.Contract(
+      PRIMITIVE_ROUTER[chainId].address,
+      PRIMITIVE_ROUTER[chainId].abi,
       trade.signer
     )
+    const Trader: ethers.Contract = new ethers.Contract(
+      TRADER[chainId].address,
+      TRADER[chainId].abi,
+      trade.signer
+    )
+    const Core = new ethers.Contract(
+      CORE[chainId].address,
+      CORE[chainId].abi,
+      trade.signer
+    )
+
+    let contract: ethers.Contract = Trader
     let methodName: string
     let args: (string | string[])[]
     let value: string
@@ -38,23 +40,37 @@ export class Trader {
     const amountIn: string = trade.inputAmount.raw.toString()
     const to: string = tradeSettings.receiver
 
-    const parameters = trade.option.optionParameters
-    const isWethCall = parameters.base.token.symbol === 'ETHER'
-    const isWethPut = parameters.quote.token.symbol === 'ETHER'
+    const isWethCall = trade.option.isWethCall
+    const isWethPut = trade.option.isWethPut
 
+    let params: string = ''
     switch (trade.operation) {
       case Operation.MINT:
         // Mint options through the Trader Library (inherited by Trader and WethConnectorArtifact).
 
         if (isWethCall) {
-          contract = new ethers.Contract(
-            wethConnectorAddress,
-            WethConnectorArtifact.abi,
-            trade.signer
-          )
-          methodName = 'safeMintWithETH'
-          args = [optionAddress, to]
+          let fn = 'safeMintWithETH'
+          let args = [optionAddress]
+          params = getParams(Core, fn, args)
+          contract = PrimitiveRouter
+          methodName = 'executeCall'
+          args = [Core.address, params]
           value = amountIn
+        } else if (trade.signitureData !== null) {
+          let fn = 'safeMintWithPermit'
+          let args = [
+            optionAddress,
+            amountIn,
+            trade.signitureData.deadline,
+            trade.signitureData.v,
+            trade.signitureData.r,
+            trade.signitureData.s,
+          ]
+          params = getParams(Core, fn, args)
+          contract = PrimitiveRouter
+          methodName = 'executeCall'
+          args = [Core.address, params]
+          value = '0'
         } else {
           methodName = 'safeMint'
           args = [optionAddress, amountIn, to]
@@ -65,22 +81,20 @@ export class Trader {
         // Exercise options through the Trader Library (inherited by Trader and WethConnectorArtifact).
 
         if (isWethPut) {
-          contract = new ethers.Contract(
-            wethConnectorAddress,
-            WethConnectorArtifact.abi,
-            trade.signer
-          )
-          methodName = 'safeExerciseWithETH'
-          args = [optionAddress, to]
+          let fn = 'safeExerciseWithETH'
+          let args = [optionAddress]
+          params = getParams(Core, fn, args)
+          contract = PrimitiveRouter
+          methodName = 'executeCall'
+          args = [Core.address, params]
           value = amountIn
         } else if (isWethCall) {
-          contract = new ethers.Contract(
-            wethConnectorAddress,
-            WethConnectorArtifact.abi,
-            trade.signer
-          )
-          methodName = 'safeExerciseForETH'
-          args = [optionAddress, amountIn, to]
+          let fn = 'safeMintForETH'
+          let args = [optionAddress, amountIn]
+          params = getParams(Core, fn, args)
+          contract = PrimitiveRouter
+          methodName = 'executeCall'
+          args = [Core.address, params]
           value = '0'
         } else {
           methodName = 'safeExercise'
@@ -92,12 +106,13 @@ export class Trader {
         // Exercise options through the Trader Library (inherited by Trader and WethConnectorArtifact).
 
         if (isWethCall) {
-          contract = new ethers.Contract(
-            wethConnectorAddress,
-            WethConnectorArtifact.abi,
-            trade.signer
-          )
-          methodName = 'safeRedeemForETH'
+          let fn = 'safeRedeemForETH'
+          let args = [optionAddress, amountIn]
+          params = getParams(Core, fn, args)
+          contract = PrimitiveRouter
+          methodName = 'executeCall'
+          args = [Core.address, params]
+          value = '0'
         } else {
           methodName = 'safeRedeem'
         }
@@ -108,12 +123,13 @@ export class Trader {
         // Exercise options through the Trader Library (inherited by Trader and WethConnectorArtifact).
 
         if (isWethCall) {
-          contract = new ethers.Contract(
-            wethConnectorAddress,
-            WethConnectorArtifact.abi,
-            trade.signer
-          )
-          methodName = 'safeCloseForETH'
+          let fn = 'safeCloseForETH'
+          let args = [optionAddress, amountIn]
+          params = getParams(Core, fn, args)
+          contract = PrimitiveRouter
+          methodName = 'executeCall'
+          args = [Core.address, params]
+          value = '0'
         } else {
           if (trade.option.getTimeToExpiry() <= 0) {
             methodName = 'safeUnwind'
@@ -128,12 +144,13 @@ export class Trader {
         // Exercise options through the Trader Library (inherited by Trader and WethConnectorArtifact).
 
         if (isWethCall) {
-          contract = new ethers.Contract(
-            wethConnectorAddress,
-            WethConnectorArtifact.abi,
-            trade.signer
-          )
-          methodName = 'safeUnwindForETH'
+          let fn = 'safeCloseForETH'
+          let args = [optionAddress, amountIn]
+          params = getParams(Core, fn, args)
+          contract = PrimitiveRouter
+          methodName = 'executeCall'
+          args = [Core.address, params]
+          value = '0'
         } else {
           methodName = 'safeUnwind'
         }
