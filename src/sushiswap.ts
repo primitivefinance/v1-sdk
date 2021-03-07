@@ -121,7 +121,6 @@ export class SushiSwap {
           tradeSettings.slippage
         )
         let params: string = ''
-
         if (trade.option.isWethCall) {
           let fn = 'openFlashLongWithETH'
           let fnArgs = [trade.option.address, outputAmount.raw.toString()]
