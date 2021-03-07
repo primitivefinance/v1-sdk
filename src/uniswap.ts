@@ -19,7 +19,7 @@ import getParams from './utils/getParams'
 /**
  * Represents the UniswapConnector contract.
  */
-export class SushiSwap {
+export class Uniswap {
   private constructor() {}
 
   public static singlePositionCallParameters(
