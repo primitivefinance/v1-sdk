@@ -268,6 +268,7 @@ export class SushiSwap {
           ]
         }
 
+        params = getParams(Liquidity, fn, fnArgs)
         contract = PrimitiveRouter
         methodName = 'executeCall'
         args = [Liquidity.address, params]
