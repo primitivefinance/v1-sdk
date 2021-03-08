@@ -1,6 +1,3 @@
-import { Operation, STABLECOINS, Venue } from './constants'
-import { Trade } from './entities'
-import ethers, { BigNumberish, BigNumber, Contract } from 'ethers'
 import {
   UNI_ROUTER_ADDRESS,
   SUSHI_ROUTER_ADDRESS,
@@ -9,17 +6,20 @@ import {
   LIQUIDITY,
   WETH9,
 } from './constants'
-import UniswapV2Router02 from '@uniswap/v2-periphery/build/UniswapV2Router02.json'
-import { TradeSettings, SinglePositionParameters } from './types'
-import { parseEther } from 'ethers/lib/utils'
+import { Trade } from './entities'
 import isZero from './utils/isZero'
-import { TokenAmount } from '@sushiswap/sdk'
 import getParams from './utils/getParams'
+import { TokenAmount } from '@sushiswap/sdk'
+import { parseEther } from 'ethers/lib/utils'
+import { Operation, STABLECOINS, Venue } from './constants'
+import { TradeSettings, SinglePositionParameters } from './types'
+import ethers, { BigNumberish, BigNumber, Contract } from 'ethers'
+import UniswapV2Router02 from '@uniswap/v2-periphery/build/UniswapV2Router02.json'
 
 /**
  * Represents the UniswapConnector contract.
  */
-export class Uniswap {
+export class SushiSwap {
   private constructor() {}
 
   public static singlePositionCallParameters(
@@ -268,6 +268,7 @@ export class Uniswap {
           ]
         }
 
+        params = getParams(Liquidity, fn, fnArgs)
         contract = PrimitiveRouter
         methodName = 'executeCall'
         args = [Liquidity.address, params]
@@ -284,19 +285,36 @@ export class Uniswap {
           amountBDesired,
           tradeSettings.slippage
         )
-        contract = UniswapRouter
-        methodName = 'addLiquidity'
-        args = [
-          trade.inputAmount.token.address,
-          trade.outputAmount.token.address,
-          trade.inputAmount.raw.toString(),
-          trade.outputAmount.raw.toString(),
-          amountAMin.toString(),
-          amountBMin.toString(),
-          to,
-          deadline,
-        ]
-        value = '0'
+        under = trade.option.underlying.address
+        weth = WETH9[chainId].address
+        if (under === weth) {
+          // ouput is WETH
+          contract = UniswapRouter
+          methodName = 'addLiquidityETH'
+          args = [
+            trade.inputAmount.token.address,
+            trade.inputAmount.raw.toString(),
+            amountAMin.toString(),
+            amountBMin.toString(),
+            to,
+            deadline,
+          ]
+          value = trade.outputAmount.raw.toString()
+        } else {
+          contract = UniswapRouter
+          methodName = 'addLiquidity'
+          args = [
+            trade.inputAmount.token.address,
+            trade.outputAmount.token.address,
+            trade.inputAmount.raw.toString(),
+            trade.outputAmount.raw.toString(),
+            amountAMin.toString(),
+            amountBMin.toString(),
+            to,
+            deadline,
+          ]
+          value = '0'
+        }
         break
       case Operation.REMOVE_LIQUIDITY:
         amountAMin = isZero(trade.totalSupply)
