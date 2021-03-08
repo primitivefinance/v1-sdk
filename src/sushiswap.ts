@@ -50,7 +50,7 @@ export class SushiSwap {
     let contract: ethers.Contract
     let methodName: string
     let args: (string | string[])[]
-    let value: string
+    let value: string = '0'
 
     let amountIn: string
     let amountOut: string
@@ -247,6 +247,7 @@ export class SushiSwap {
             trade.signitureData.r,
             trade.signitureData.s,
           ]
+          value = '0'
         } else if (under === weth) {
           fn = 'addShortLiquidityWithETH'
           fnArgs = [
@@ -266,6 +267,7 @@ export class SushiSwap {
             amountBMin.toString(),
             deadline,
           ]
+          value = '0'
         }
 
         params = getParams(Liquidity, fn, fnArgs)
