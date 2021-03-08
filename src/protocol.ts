@@ -120,12 +120,12 @@ export class Protocol {
   }
 
   public static async getPairsFromMultiCall(
+    chainId: number,
     provider: ethers.ethers.providers.Web3Provider,
     tokensArray,
     venue?: Venue
   ): Promise<any> {
     const multi = new MultiCall(provider)
-    const chainId = await (await provider.getSigner()).getChainId()
     const factoryAddress = venue
       ? venue === Venue.SUSHISWAP
         ? SUSHI_FACTORY_ADDRESS[chainId]

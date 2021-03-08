@@ -61,12 +61,7 @@ export class SushiSwap {
     let path: string[]
     let minPayout
 
-    const deadline =
-      tradeSettings.timeLimit > 0
-        ? (
-            Math.floor(new Date().getTime() / 1000) + tradeSettings.timeLimit
-          ).toString()
-        : tradeSettings.deadline.toString()
+    const deadline = tradeSettings.deadline.toString()
     const to: string = tradeSettings.receiver
 
     const UniswapRouter = new ethers.Contract(
