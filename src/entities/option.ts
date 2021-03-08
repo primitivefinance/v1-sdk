@@ -1,11 +1,12 @@
 import ethers, { BigNumberish, BigNumber } from 'ethers'
 import OptionArtifact from '@primitivefi/contracts/artifacts/Option.json'
 import { formatEther, parseEther } from 'ethers/lib/utils'
-import { ChainId, Token, TokenAmount, WETH } from '@uniswap/sdk'
+import { ChainId, Token, TokenAmount } from '@uniswap/sdk'
 import * as UniswapSDK from '@uniswap/sdk'
 import * as SushiSwapSDK from '@sushiswap/sdk'
 import { STABLECOINS, ADDRESS_ZERO } from '../constants'
 import isZero from '../utils/isZero'
+import { WETH9 } from '../constants'
 
 export interface OptionParameters {
   base: UniswapSDK.TokenAmount | SushiSwapSDK.TokenAmount
@@ -208,7 +209,7 @@ export class Option extends Token {
 
   public get isWethCall(): boolean {
     return this.isCall
-      ? this.underlying.address == WETH[this.chainId].address
+      ? this.underlying.address == WETH9[this.chainId].address
         ? true
         : false
       : false
@@ -216,7 +217,7 @@ export class Option extends Token {
 
   public get isWethPut(): boolean {
     return this.isPut
-      ? this.strike.address == WETH[this.chainId].address
+      ? this.strike.address == WETH9[this.chainId].address
         ? true
         : false
       : false
