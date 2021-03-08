@@ -40,10 +40,10 @@ export class SushiSwap {
         uniswapRouterAddress = UNI_ROUTER_ADDRESS
         break
       case Venue.SUSHISWAP:
-        uniswapRouterAddress = SUSHI_ROUTER_ADDRESS
+        uniswapRouterAddress = SUSHI_ROUTER_ADDRESS[chainId]
         break
       default:
-        uniswapRouterAddress = SUSHI_ROUTER_ADDRESS
+        uniswapRouterAddress = SUSHI_ROUTER_ADDRESS[chainId]
         break
     }
 
@@ -235,7 +235,7 @@ export class SushiSwap {
           let dai: string = STABLECOINS[chainId].address
           fn =
             under === dai
-              ? 'addShortLiquidityWithUnderlyingWithDaiPermit'
+              ? 'addShortLiquidityWithUnderlyingWithDAIPermit'
               : 'addShortLiquidityWithUnderlyingWithPermit'
           fnArgs = [
             trade.option.address,
