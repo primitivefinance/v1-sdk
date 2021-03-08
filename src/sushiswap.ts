@@ -235,7 +235,7 @@ export class SushiSwap {
           let dai: string = STABLECOINS[chainId].address
           fn =
             under === dai
-              ? 'addShortLiquidityWithUnderlyingWithDAIPermit'
+              ? 'addShortLiquidityDAIWithPermit'
               : 'addShortLiquidityWithUnderlyingWithPermit'
           fnArgs = [
             trade.option.address,
