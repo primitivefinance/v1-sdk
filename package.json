@@ -10,6 +10,9 @@
   "files": [
     "dist"
   ],
+  "release": {
+    "branches": ["main"]
+  },
   "scripts": {
     "lint": "tsdx lint src test",
     "build": "tsdx build",
