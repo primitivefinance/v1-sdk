@@ -284,19 +284,36 @@ export class SushiSwap {
           amountBDesired,
           tradeSettings.slippage
         )
-        contract = UniswapRouter
-        methodName = 'addLiquidity'
-        args = [
-          trade.inputAmount.token.address,
-          trade.outputAmount.token.address,
-          trade.inputAmount.raw.toString(),
-          trade.outputAmount.raw.toString(),
-          amountAMin.toString(),
-          amountBMin.toString(),
-          to,
-          deadline,
-        ]
-        value = '0'
+        under = trade.option.underlying.address
+        weth = WETH9[chainId].address
+        if (under === weth) {
+          // ouput is WETH
+          contract = UniswapRouter
+          methodName = 'addLiquidityETH'
+          args = [
+            trade.inputAmount.token.address,
+            trade.inputAmount.raw.toString(),
+            amountAMin.toString(),
+            amountBMin.toString(),
+            to,
+            deadline,
+          ]
+          value = trade.outputAmount.raw.toString()
+        } else {
+          contract = UniswapRouter
+          methodName = 'addLiquidity'
+          args = [
+            trade.inputAmount.token.address,
+            trade.outputAmount.token.address,
+            trade.inputAmount.raw.toString(),
+            trade.outputAmount.raw.toString(),
+            amountAMin.toString(),
+            amountBMin.toString(),
+            to,
+            deadline,
+          ]
+          value = '0'
+        }
         break
       case Operation.REMOVE_LIQUIDITY:
         amountAMin = isZero(trade.totalSupply)
