@@ -8,6 +8,7 @@ export const createMarket = async (
   signer: ethers.Signer,
   optionAddress: string
 ): Promise<Contract> => {
+  const chainId = await signer.getChainId()
   const option: Contract = new Contract(optionAddress, OptionABI.abi, signer)
   let under: string
   let redeem: string
@@ -19,7 +20,7 @@ export const createMarket = async (
   }
 
   const factory: Contract = new Contract(
-    SUSHI_FACTORY_ADDRESS,
+    SUSHI_FACTORY_ADDRESS[chainId],
     UniswapV2Factory.abi,
     signer
   )

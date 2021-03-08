@@ -40,10 +40,10 @@ export class Uniswap {
         uniswapRouterAddress = UNI_ROUTER_ADDRESS
         break
       case Venue.SUSHISWAP:
-        uniswapRouterAddress = SUSHI_ROUTER_ADDRESS
+        uniswapRouterAddress = SUSHI_ROUTER_ADDRESS[chainId]
         break
       default:
-        uniswapRouterAddress = SUSHI_ROUTER_ADDRESS
+        uniswapRouterAddress = SUSHI_ROUTER_ADDRESS[chainId]
         break
     }
 
