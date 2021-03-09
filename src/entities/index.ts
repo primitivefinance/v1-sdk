@@ -1,5 +1,4 @@
 export * from './option'
 export * from './trade'
-export * from './uniMarket'
 export * from './sushiMarket'
 export * from './registry'

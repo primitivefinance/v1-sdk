@@ -9,9 +9,8 @@ import RinkebyFactory from '@primitivefi/contracts/deployments/rinkeby/OptionFac
 import TestERC20 from '@primitivefi/contracts/artifacts/TestERC20.json'
 import UniswapV2Pair from '@uniswap/v2-core/build/UniswapV2Pair.json'
 import UniswapV2Factory from '@uniswap/v2-core/build/UniswapV2Factory.json'
-import { Token, TokenAmount } from '@uniswap/sdk'
+import { Token, TokenAmount, FACTORY_ADDRESS } from '@sushiswap/sdk'
 import MultiCall from './multicall'
-import { FACTORY_ADDRESS } from '@uniswap/sdk'
 import { Venue, SUSHI_FACTORY_ADDRESS } from './constants'
 
 /**
@@ -126,12 +125,7 @@ export class Protocol {
     venue?: Venue
   ): Promise<any> {
     const multi = new MultiCall(provider)
-    const factoryAddress = venue
-      ? venue === Venue.SUSHISWAP
-        ? SUSHI_FACTORY_ADDRESS[chainId]
-        : FACTORY_ADDRESS
-      : FACTORY_ADDRESS
-
+    const factoryAddress = SUSHI_FACTORY_ADDRESS[chainId]
     const chunks = Protocol.chunkArray(tokensArray, 10)
     const datas = []
     let pairAddresses = []
