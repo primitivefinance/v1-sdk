@@ -1,7 +1,6 @@
 import ethers, { BigNumberish, BigNumber } from 'ethers'
-import { Option, SushiSwapMarket, UniswapMarket } from './index'
+import { Option, SushiSwapMarket } from './index'
 import { Operation, Venue } from '../constants/index'
-import * as UniswapSDK from '@uniswap/sdk'
 import * as SushiSwapSDK from '@sushiswap/sdk'
 import UniswapV2Pair from '@uniswap/v2-core/build/UniswapV2Pair.json'
 import { parseEther } from 'ethers/lib/utils'
@@ -19,20 +18,20 @@ export interface SignitureData {
 export class Trade {
   public readonly venue: Venue
   public readonly option: Option
-  public readonly market: SushiSwapMarket | UniswapMarket
+  public readonly market: SushiSwapMarket
   public readonly totalSupply: BigNumberish
-  public inputAmount: UniswapSDK.TokenAmount | SushiSwapSDK.TokenAmount
-  public outputAmount: UniswapSDK.TokenAmount | SushiSwapSDK.TokenAmount
+  public inputAmount: SushiSwapSDK.TokenAmount
+  public outputAmount: SushiSwapSDK.TokenAmount
   public readonly operation: Operation
   public readonly signer: ethers.Signer
   public readonly signitureData: SignitureData | null
 
   public constructor(
     option: Option,
-    market: SushiSwapMarket | UniswapMarket,
+    market: SushiSwapMarket,
     totalSupply: BigNumberish,
-    inputAmount: UniswapSDK.TokenAmount | SushiSwapSDK.TokenAmount,
-    outputAmount: UniswapSDK.TokenAmount | SushiSwapSDK.TokenAmount,
+    inputAmount: SushiSwapSDK.TokenAmount,
+    outputAmount: SushiSwapSDK.TokenAmount,
     operation: Operation,
     venue: Venue,
     signer: ethers.Signer,
@@ -53,15 +52,15 @@ export class Trade {
    * @dev Gets the underlyingToken cost to purchase long option tokens.
    * @notice We use outputAmount because the path is redeem -> underlying, where we borrow underlying and pay back redeem.
    */
-  public get openPremium(): UniswapSDK.TokenAmount | SushiSwapSDK.TokenAmount {
+  public get openPremium(): SushiSwapSDK.TokenAmount {
     return this.market.getOpenPremium(this.outputAmount)
   }
 
-  public get closePremium(): UniswapSDK.TokenAmount | SushiSwapSDK.TokenAmount {
+  public get closePremium(): SushiSwapSDK.TokenAmount {
     return this.market.getClosePremium(this.outputAmount)
   }
 
-  public get shortPremium(): UniswapSDK.TokenAmount | SushiSwapSDK.TokenAmount {
+  public get shortPremium(): SushiSwapSDK.TokenAmount {
     return this.market.getShortPremium(this.outputAmount)
   }
 
@@ -98,9 +97,7 @@ export class Trade {
     return formattedValue
   }
 
-  public maximumAmountIn(
-    slippagePercent: string
-  ): UniswapSDK.TokenAmount | SushiSwapSDK.TokenAmount {
+  public maximumAmountIn(slippagePercent: string): SushiSwapSDK.TokenAmount {
     if (this.operation === Operation.CLOSE_SHORT) {
       return this.inputAmount
     }
@@ -109,16 +106,14 @@ export class Trade {
     const one = ethers.BigNumber.from(1000)
     const slippageAdjustedValue = amountIn.mul(one.add(slippage)).div(1000)
     const formattedValue = slippageAdjustedValue
-    const SDK = this.venue === Venue.UNISWAP ? UniswapSDK : SushiSwapSDK
+    const SDK = SushiSwapSDK
     return new SDK.TokenAmount(
       this.inputAmount.token,
       formattedValue.toString()
     )
   }
 
-  public minimumAmountOut(
-    slippagePercent: string
-  ): UniswapSDK.TokenAmount | SushiSwapSDK.TokenAmount {
+  public minimumAmountOut(slippagePercent: string): SushiSwapSDK.TokenAmount {
     if (this.operation === Operation.LONG) {
       return this.outputAmount
     }
@@ -127,7 +122,7 @@ export class Trade {
     const one = ethers.BigNumber.from(1000)
     const slippageAdjustedValue = amountIn.mul(one.sub(slippage)).div(1000)
     const formattedValue = slippageAdjustedValue
-    const SDK = this.venue === Venue.UNISWAP ? UniswapSDK : SushiSwapSDK
+    const SDK = SushiSwapSDK
     return new SDK.TokenAmount(
       this.outputAmount.token,
       formattedValue.toString()
