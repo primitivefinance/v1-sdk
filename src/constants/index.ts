@@ -1,6 +1,12 @@
 import { Deployment } from './types'
 import { parseEther } from 'ethers/lib/utils'
-import { ChainId, Token, WETH, FACTORY_ADDRESS } from '@uniswap/sdk'
+import {
+  ChainId,
+  Token,
+  WETH,
+  ROUTER_ADDRESS,
+  FACTORY_ADDRESS,
+} from '@sushiswap/sdk'
 import Trader from '@primitivefi/contracts/deployments/live_1/Trader.json'
 import TraderTestnet from '@primitivefi/contracts/deployments/rinkeby/Trader.json'
 import Registry from '@primitivefi/contracts/deployments/live_1/Registry.json'
@@ -101,16 +107,8 @@ export const getIconForMarket = (key) => {
 }
 
 export const ADDRESS_ZERO = '0x0000000000000000000000000000000000000000'
-export const UNI_FACTORY_ADDRESS = FACTORY_ADDRESS
-export const UNI_ROUTER_ADDRESS = '0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D'
-export const SUSHI_ROUTER_ADDRESS = {
-  1: '0xd9e1cE17f2641f24aE83637ab66a2cca9C378B9F',
-  4: '0x1b02dA8Cb0d097eB8D57A175b88c7D8b47997506',
-}
-export const SUSHI_FACTORY_ADDRESS = {
-  1: '0xC0AEe478e3658e2610c5F7A4A2E1777cE9e4f2Ac',
-  4: '0xc35DADB65012eC5796536bD9864eD8773aBc74C4',
-}
+export const SUSHI_ROUTER_ADDRESS = ROUTER_ADDRESS
+export const SUSHI_FACTORY_ADDRESS = FACTORY_ADDRESS
 
 export const TEST_DAI: Token = new Token(
   ChainId.RINKEBY,

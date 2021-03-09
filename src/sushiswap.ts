@@ -1,5 +1,4 @@
 import {
-  UNI_ROUTER_ADDRESS,
   SUSHI_ROUTER_ADDRESS,
   PRIMITIVE_ROUTER,
   SWAPS,
@@ -33,19 +32,7 @@ export class SushiSwap {
       PRIMITIVE_ROUTER[chainId].abi,
       trade.signer
     )
-    let uniswapRouterAddress: string
-
-    switch (venue) {
-      case Venue.UNISWAP:
-        uniswapRouterAddress = UNI_ROUTER_ADDRESS
-        break
-      case Venue.SUSHISWAP:
-        uniswapRouterAddress = SUSHI_ROUTER_ADDRESS[chainId]
-        break
-      default:
-        uniswapRouterAddress = SUSHI_ROUTER_ADDRESS[chainId]
-        break
-    }
+    let uniswapRouterAddress: string = SUSHI_ROUTER_ADDRESS[chainId]
 
     let contract: ethers.Contract
     let methodName: string

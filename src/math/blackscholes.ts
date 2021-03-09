@@ -2,7 +2,7 @@
 
 import { Option } from '../entities'
 import { NormalDistribution } from './normaldistribution'
-import { Token } from '@uniswap/sdk'
+import { Token } from '@sushiswap/sdk'
 
 export interface BlackScholesInterface {
   standardDeviation?: number
