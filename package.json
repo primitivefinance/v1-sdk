@@ -26,7 +26,7 @@
   "dependencies": {
     "@ethersproject/providers": "^5.0.5",
     "@primitivefi/contracts": "0.4.4",
-    "@primitivefi/v1-connectors": "2.1.0",
+    "@primitivefi/v1-connectors": "2.1.1",
     "@uniswap/v2-core": "^1.0.1",
     "@uniswap/v2-periphery": "^1.1.0-beta.0",
     "bignumber.js": "^9.0.0",
