@@ -7,18 +7,19 @@ import {
   ROUTER_ADDRESS,
   FACTORY_ADDRESS,
 } from '@sushiswap/sdk'
-import Trader from '@primitivefi/contracts/deployments/live_1/Trader.json'
 import TraderTestnet from '@primitivefi/contracts/deployments/rinkeby/Trader.json'
-import Registry from '@primitivefi/contracts/deployments/live_1/Registry.json'
 import RegistryTestnet from '@primitivefi/contracts/deployments/rinkeby/Registry.json'
-import PrimitiveRouter from '@primitivefi/v1-connectors/deployments/rinkeby/PrimitiveRouter.json' //FIX
-import PrimitiveRouterTestnet from '@primitivefi/v1-connectors/deployments/rinkeby/PrimitiveRouter.json'
-import PrimitiveCore from '@primitivefi/v1-connectors/deployments/rinkeby/PrimitiveCore.json' //FIX
 import PrimitiveCoreTestnet from '@primitivefi/v1-connectors/deployments/rinkeby/PrimitiveCore.json'
-import PrimitiveSwaps from '@primitivefi/v1-connectors/deployments/rinkeby/PrimitiveSwaps.json' //FIX
+import PrimitiveRouterTestnet from '@primitivefi/v1-connectors/deployments/rinkeby/PrimitiveRouter.json'
 import PrimitiveSwapsTestnet from '@primitivefi/v1-connectors/deployments/rinkeby/PrimitiveSwaps.json'
-import PrimitiveLiquidity from '@primitivefi/v1-connectors/deployments/rinkeby/PrimitiveLiquidity.json' //FIX
 import PrimitiveLiquidityTestnet from '@primitivefi/v1-connectors/deployments/rinkeby/PrimitiveLiquidity.json'
+
+import Trader from '@primitivefi/contracts/deployments/live_1/Trader.json'
+import Registry from '@primitivefi/contracts/deployments/live_1/Registry.json'
+import PrimitiveCore from '@primitivefi/v1-connectors/deployments/live/PrimitiveCore.json' //FIX
+import PrimitiveRouter from '@primitivefi/v1-connectors/deployments/live/PrimitiveRouter.json'
+import PrimitiveSwaps from '@primitivefi/v1-connectors/deployments/live/PrimitiveSwaps.json' //FIX
+import PrimitiveLiquidity from '@primitivefi/v1-connectors/deployments/live/PrimitiveLiquidity.json' //FIX
 
 export interface MarketMetadata {
   name: string
