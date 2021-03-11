@@ -124,16 +124,22 @@ export class SushiSwap {
           trade.inputAmount.token.address,
           trade.outputAmount.token.address,
         ]
+        if (trade.option.isWethCall) {
+          methodName = 'swapETHForExactTokens'
+          args = [trade.outputAmount.raw.toString(), path, to, deadline]
+          value = amountInMax
+        } else {
+          methodName = 'swapTokensForExactTokens'
+          args = [
+            trade.outputAmount.raw.toString(),
+            amountInMax,
+            path,
+            to,
+            deadline,
+          ]
+          value = '0'
+        }
         contract = UniswapRouter
-        methodName = 'swapTokensForExactTokens'
-        args = [
-          trade.outputAmount.raw.toString(),
-          amountInMax,
-          path,
-          to,
-          deadline,
-        ]
-        value = '0'
         break
       case Operation.CLOSE_LONG:
         minPayout = trade.closePremium.raw.toString()
@@ -165,8 +171,12 @@ export class SushiSwap {
           trade.inputAmount.token.address,
           trade.outputAmount.token.address,
         ]
+        if (trade.option.isWethCall) {
+          methodName = 'swapExactTokensForETH'
+        } else {
+          methodName = 'swapExactTokensForTokens'
+        }
         contract = UniswapRouter
-        methodName = 'swapExactTokensForTokens'
         args = [amountIn, amountOutMin, path, to, deadline]
         value = '0'
         break
