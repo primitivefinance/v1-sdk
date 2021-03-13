@@ -1,9 +1,9 @@
 import ethers, { BigNumberish } from 'ethers'
 import { parseEther } from 'ethers/lib/utils'
-import ERC20 from '@primitivefi/contracts/artifacts/ERC20.json'
-import TestERC20 from '@primitivefi/contracts/artifacts/TestERC20.json'
+import ERC20 from '@primitivefi/contracts/artifacts/contracts/option/primitives/ERC20.sol/ERC20.json'
+import TestERC20 from '@primitivefi/contracts/artifacts/contracts/test/tokens/TestERC20.sol/TestERC20.json'
 import Dai from '@primitivefi/v1-connectors/deployments/rinkeby/Dai.json'
-import Weth9 from '@primitivefi/contracts/artifacts/WETH9.json'
+import Weth9 from '@primitivefi/contracts/artifacts/contracts/test/tokens/WETH9.sol/WETH9.json'
 import { STABLECOINS, WETH9 } from './constants'
 
 export const mintTestTokens = async (
