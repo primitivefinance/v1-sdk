@@ -1,5 +1,5 @@
 import ethers, { BigNumberish, Transaction } from 'ethers'
-import ERC20 from '@primitivefi/contracts/artifacts/ERC20.json'
+import ERC20 from '@primitivefi/contracts/artifacts/contracts/option/primitives/ERC20.sol/ERC20.json'
 import { parseEther } from 'ethers/lib/utils'
 import { SinglePositionParameters } from '../types'
 const MIN_ALLOWANCE: ethers.BigNumber = parseEther('10000000')

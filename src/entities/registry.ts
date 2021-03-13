@@ -1,6 +1,7 @@
-import RegistryABI from '@primitivefi/contracts/artifacts/Registry.json'
-import RegistryMainnet from '@primitivefi/contracts/deployments/live_1/Registry.json'
+import RegistryABI from '@primitivefi/contracts/artifacts/contracts/option/applications/Registry.sol/Registry.json'
+import RegistryMainnet from '@primitivefi/contracts/deployments/live/Registry.json'
 import RegistryTestnet from '@primitivefi/contracts/deployments/rinkeby/Registry.json'
+import RegistryKovan from '@primitivefi/contracts/deployments/kovan/Registry.json'
 import ethers, { BigNumberish, BigNumber } from 'ethers'
 import { parseEther } from 'ethers/lib/utils'
 import { STABLECOINS } from '../constants'
@@ -9,6 +10,7 @@ import * as SushiSwapSDK from '@sushiswap/sdk'
 export const REGISTRY_ADDRESS: { [key: number]: string } = {
   1: RegistryMainnet.address,
   4: RegistryTestnet.address,
+  42: RegistryKovan.address,
 }
 
 interface FullOptionParameters {

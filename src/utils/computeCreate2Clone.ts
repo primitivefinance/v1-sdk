@@ -1,4 +1,4 @@
-import OptionContract from '@primitivefi/contracts/artifacts/Option.json'
+import OptionContract from '@primitivefi/contracts/artifacts/contracts/option/primitives/Option.sol/Option.json'
 import {
   arrayify,
   getCreate2Address,
