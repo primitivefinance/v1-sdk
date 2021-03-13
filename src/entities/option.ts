@@ -1,5 +1,5 @@
 import ethers, { BigNumberish, BigNumber } from 'ethers'
-import OptionArtifact from '@primitivefi/contracts/artifacts/Option.json'
+import OptionArtifact from '@primitivefi/contracts/artifacts/contracts/option/primitives/Option.sol/Option.json'
 import { formatEther, parseEther } from 'ethers/lib/utils'
 import { ChainId, Token, TokenAmount } from '@sushiswap/sdk'
 import * as SushiSwapSDK from '@sushiswap/sdk'

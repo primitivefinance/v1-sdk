@@ -1,12 +1,11 @@
 import ethers from 'ethers'
 import { Option, OptionParameters } from './entities/option'
-import Registry from '@primitivefi/contracts/artifacts/Registry.json'
+import Registry from '@primitivefi/contracts/artifacts/contracts/option/applications/Registry.sol/Registry.json'
 import RegistryRinkeby from '@primitivefi/contracts/deployments/rinkeby/Registry.json'
-import RegistryMainnet from '@primitivefi/contracts/deployments/live_1/Registry.json'
-import OptionContract from '@primitivefi/contracts/artifacts/Option.json'
-import RinkebyFactory from '@primitivefi/contracts/deployments/rinkeby/OptionFactory.json'
-//import MainnetFactory from '@primitivefi/contracts/deployments/live_1/OptionFactory.json'
-import TestERC20 from '@primitivefi/contracts/artifacts/TestERC20.json'
+import RegistryKovan from '@primitivefi/contracts/deployments/kovan/Registry.json'
+import RegistryMainnet from '@primitivefi/contracts/deployments/live/Registry.json'
+import OptionContract from '@primitivefi/contracts/artifacts/contracts/option/primitives/Option.sol/Option.json'
+import TestERC20 from '@primitivefi/contracts/artifacts/contracts/test/tokens/TestERC20.sol/TestERC20.json'
 import UniswapV2Pair from '@uniswap/v2-core/build/UniswapV2Pair.json'
 import UniswapV2Factory from '@uniswap/v2-core/build/UniswapV2Factory.json'
 import { Token, TokenAmount, FACTORY_ADDRESS } from '@sushiswap/sdk'
@@ -23,6 +22,8 @@ export class Protocol {
     let address: string
     if (chainId === 4) {
       address = RegistryRinkeby.address
+    } else if (chainId === 42) {
+      address = RegistryKovan.address
     } else if (chainId === 1) {
       address = RegistryMainnet.address
     } else {

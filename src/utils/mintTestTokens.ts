@@ -1,5 +1,5 @@
 import ethers from 'ethers'
-import ERC20 from '@primitivefi/contracts/artifacts/TestERC20.json'
+import ERC20 from '@primitivefi/contracts/artifacts/contracts/test/tokens/TestERC20.sol/TestERC20.json'
 
 /* const mintTestTokens = async (address: string, signer: ethers.Signer) => {
   const tokenArray = [

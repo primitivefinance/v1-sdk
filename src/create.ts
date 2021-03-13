@@ -1,6 +1,6 @@
 import ethers, { Contract } from 'ethers'
 import { SUSHI_FACTORY_ADDRESS, PRIMITIVE_ROUTER } from './constants'
-import OptionABI from '@primitivefi/contracts/artifacts/Option.json'
+import OptionABI from '@primitivefi/contracts/artifacts/contracts/option/primitives/Option.sol/Option.json'
 import UniswapV2Factory from '@uniswap/v2-core/build/UniswapV2Factory.json'
 import UniswapV2Pair from '@uniswap/v2-core/build/UniswapV2Pair.json'
 

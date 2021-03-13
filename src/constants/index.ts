@@ -14,8 +14,8 @@ import PrimitiveRouterTestnet from '@primitivefi/v1-connectors/deployments/rinke
 import PrimitiveSwapsTestnet from '@primitivefi/v1-connectors/deployments/rinkeby/PrimitiveSwaps.json'
 import PrimitiveLiquidityTestnet from '@primitivefi/v1-connectors/deployments/rinkeby/PrimitiveLiquidity.json'
 
-import Trader from '@primitivefi/contracts/deployments/live_1/Trader.json'
-import Registry from '@primitivefi/contracts/deployments/live_1/Registry.json'
+import Trader from '@primitivefi/contracts/deployments/live/Trader.json'
+import Registry from '@primitivefi/contracts/deployments/live/Registry.json'
 import PrimitiveCore from '@primitivefi/v1-connectors/deployments/live/PrimitiveCore.json' //FIX
 import PrimitiveRouter from '@primitivefi/v1-connectors/deployments/live/PrimitiveRouter.json'
 import PrimitiveSwaps from '@primitivefi/v1-connectors/deployments/live/PrimitiveSwaps.json' //FIX
@@ -119,6 +119,14 @@ export const TEST_DAI: Token = new Token(
   'Dai Stablecoin'
 )
 
+export const TEST_DAI_KOVAN: Token = new Token(
+  ChainId.KOVAN,
+  require('@primitivefi/v1-connectors/deployments/kovan/Dai.json').address,
+  18,
+  'DAI',
+  'Dai Stablecoin'
+)
+
 export const STABLECOINS: { [key: number]: Token } = {
   1: new Token(
     ChainId.MAINNET,
@@ -128,6 +136,7 @@ export const STABLECOINS: { [key: number]: Token } = {
     'Dai Stablecoin'
   ),
   4: TEST_DAI,
+  42: TEST_DAI_KOVAN,
 }
 
 export const TEST_WETH: Token = new Token(
@@ -149,31 +158,37 @@ export const WETH9: { [key: number]: Token } = {
 export const TRADER: { [key: number]: Deployment } = {
   1: Trader,
   4: TraderTestnet,
+  42: require('@primitivefi/contracts/deployments/kovan/Trader.json'),
 }
 
 export const REGISTRY: { [key: number]: any } = {
   1: Registry,
   4: RegistryTestnet,
+  42: require('@primitivefi/contracts/deployments/kovan/Registry.json'),
 }
 
 export const PRIMITIVE_ROUTER: { [key: number]: Deployment } = {
   1: PrimitiveRouter,
   4: PrimitiveRouterTestnet,
+  42: require('@primitivefi/v1-connectors/deployments/kovan/PrimitiveRouter.json'),
 }
 
 export const CORE: { [key: number]: Deployment } = {
   1: PrimitiveCore,
   4: PrimitiveCoreTestnet,
+  42: require('@primitivefi/v1-connectors/deployments/kovan/PrimitiveCore.json'),
 }
 
 export const SWAPS: { [key: number]: Deployment } = {
   1: PrimitiveSwaps,
   4: PrimitiveSwapsTestnet,
+  42: require('@primitivefi/v1-connectors/deployments/kovan/PrimitiveSwaps.json'),
 }
 
 export const LIQUIDITY: { [key: number]: Deployment } = {
   1: PrimitiveLiquidity,
   4: PrimitiveLiquidityTestnet,
+  42: require('@primitivefi/v1-connectors/deployments/kovan/PrimitiveLiquidity.json'),
 }
 
 export const TEST_ETH_CALL: Token = new Token(
@@ -192,9 +207,45 @@ export const TEST_ETH_PUT: Token = new Token(
   'Primitive V1 Option'
 )
 
+export const TEST_ETH_CALL_KOVAN: Token = new Token(
+  ChainId.KOVAN,
+  '0xc6CF20a1C85a95CdA92bfac7d0FB3703C3447340',
+  18,
+  'PRM',
+  'Primitive V1 Option'
+)
+
+export const TEST_ETH_PUT_KOVAN: Token = new Token(
+  ChainId.KOVAN,
+  '0x94Ac517bDf433275efb79B3201bDF48E2Ef25c69',
+  18,
+  'PRM',
+  'Primitive V1 Option'
+)
+
+export const TEST_RAI_CALL: Token = new Token(
+  ChainId.KOVAN,
+  '0x014Db0F91ad01DF86869Dc4110b04c8d4fdbDfF7',
+  18,
+  'PRM',
+  'Primitive V1 Option'
+)
+
+export const TEST_RAI_PUT: Token = new Token(
+  ChainId.KOVAN,
+  '0xC633A80819B9E7BFeBDBD56CF3094773b85E3016',
+  18,
+  'PRM',
+  'Primitive V1 Option'
+)
+
 export const TEST_OPTIONS: { [asset: string]: { [key: number]: Token[] } } = {
   eth: {
     4: [TEST_ETH_CALL, TEST_ETH_PUT],
+    42: [TEST_ETH_CALL_KOVAN, TEST_ETH_PUT_KOVAN],
+  },
+  rai: {
+    42: [TEST_RAI_CALL, TEST_RAI_PUT],
   },
 }
 
@@ -209,6 +260,7 @@ export const DEFAULT_SLIPPAGE = '0.01'
 export const DEFAULT_TIMELIMIT = 60 * 20
 export const ETHERSCAN_MAINNET = 'https://etherscan.io/address'
 export const ETHERSCAN_RINKEBY = 'https://rinkeby.etherscan.io/address'
+export const ETHERSCAN_KOVAN = 'https://kovan.etherscan.io/address'
 
 export const DEFAULT_ALLOWANCE = parseEther('10000000')
 
